@@ -15,7 +15,7 @@ const ranking = async (interaction) => {
 }
 
 const sheet = async (interaction) => {
-  await interaction.reply(`https://docs.google.com/spreadsheets/d/1hR8FLe3aMY48h6v1-a6dZPCv4ahXAsKu29PpSLs1FXs/edit?usp=sharing`);
+  await interaction.reply(process.env.SPREADSHEET_URL);
 }
 
 const ready = async (interaction, appState) => {
