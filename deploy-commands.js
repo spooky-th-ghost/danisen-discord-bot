@@ -15,7 +15,8 @@ const commands = [
   new SlashCommandBuilder().setName('sheet').setDescription('The Danisen Ranking sheet'),
   new SlashCommandBuilder().setName('ready').setDescription('Enter Matchmaking'),
   new SlashCommandBuilder().setName('unready').setDescription('Remove yourself from the matchmaking pool'),
-  new SlashCommandBuilder().setName('players').setDescription('Display the users in matchmaking')
+  new SlashCommandBuilder().setName('players').setDescription('Display the users in matchmaking'),
+  new SlashCommandBuilder().setName('session').setDescription('Display wether the Danisen league is currently in session')
 ]
 	.map(command => command.toJSON());
 

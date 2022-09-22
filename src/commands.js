@@ -1,3 +1,6 @@
+const { isSessionOpen } = require('./database');
+const moment = require('moment');
+
 const ping = async (interaction) => {
   await interaction.reply('Pong!');
 }
@@ -58,6 +61,16 @@ const players = async (interaction, appState) => {
   await interaction.reply(JSON.stringify(appState.currentPlayers));
 }
 
+const session = async (interaction, appState) => {
+  let data = await isSessionOpen();
+  let sessionStatus = data.variable_value ? 'OPEN' : 'CLOSED';
+  let formattedDate = moment(data.last_changed).format('MMMM Do YYYY, h:mm:ss a');
+  let response = `
+    The Danisen session is currently ${sessionStatus},
+    the session has been ${sessionStatus} since ${formattedDate}`;
+  await interaction.reply(response);
+}
+
 const executeCommands = async (interaction, appState) => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -87,6 +100,9 @@ const executeCommands = async (interaction, appState) => {
       break;
     case 'players':
       await players(interaction, appState);
+      break;
+    case 'session':
+      await session(interaction, appState);
       break;
   }
 }
