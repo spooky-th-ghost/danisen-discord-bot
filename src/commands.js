@@ -1,4 +1,13 @@
-const { isSessionOpen } = require('./database');
+const {
+  isSessionOpen,
+  registerUser,
+  doesUserExist,
+  userHasFreeTeamSlot,
+  getUserProfile,
+  registerNewTeam
+} = require('./database');
+
+const { CharacterCodes} = require('./character_codes');
 const moment = require('moment');
 
 const ping = async (interaction) => {
@@ -13,8 +22,16 @@ const user = async (interaction) => {
   await interaction.reply(`Your tag: ${interaction.user.tag}\nYour id: ${interaction.user.id}`);
 }
 
-const ranking = async (interaction) => {
-  await interaction.reply(`Trash, go lab`);
+const profile = async (interaction) => {
+  let exists = await doesUserExist(interaction);
+  if (exists) {
+    let userProfile = await getUserProfile(interaction);
+    let nameAndRankString = `${userProfile.username} | ${userProfile.rank} ${userProfile.points}`;
+    let teamString = userProfile.teams.join('\n');
+    await interaction.reply(`${nameAndRankString} \n ${teamString}`);
+  } else {
+    await interaction.reply('You need to register in order to view your profile...');
+  }
 }
 
 const sheet = async (interaction) => {
@@ -71,6 +88,26 @@ const session = async (interaction, appState) => {
   await interaction.reply(response);
 }
 
+const register = async (interaction, appState) => {
+  let exists = await doesUserExist(interaction);
+  if (exists) {
+    await interaction.reply('You have already registered')
+  } else {
+    await registerUser(interaction);
+    await interaction.reply('You have successfully registered, call /register-team to register a team!');
+  }
+}
+
+const registerTeam = async (interaction, appState) => {
+  let hasSlot = await userHasFreeTeamSlot(interaction);
+  if (!hasSlot) {
+    await interaction.reply('You have no open team slots, call /profile to view your currently registered teams.')
+  } else {
+    let displayString = await registerNewTeam(interaction);
+    await interaction.reply(`Team registered successfully! \n ${displayString}`);
+  }
+}
+
 const executeCommands = async (interaction, appState) => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -86,8 +123,8 @@ const executeCommands = async (interaction, appState) => {
     case 'user':
       await user(interaction);
       break;
-    case 'ranking':
-      await ranking(interaction);
+    case 'profile':
+      await profile(interaction);
       break;
     case 'sheet':
       await sheet(interaction);
@@ -103,6 +140,12 @@ const executeCommands = async (interaction, appState) => {
       break;
     case 'session':
       await session(interaction, appState);
+      break;
+    case 'register':
+      await register(interaction, appState);
+      break;
+    case 'register-team':
+      await registerTeam(interaction, appState);
       break;
   }
 }

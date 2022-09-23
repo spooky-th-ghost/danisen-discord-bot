@@ -1,4 +1,5 @@
 require('dotenv').config();
+let { keepPoolAlive} = require('./database');
 
 const { Client, GatewayIntentBits } = require('discord.js');
 const { executeCommands } = require('./commands');
@@ -28,3 +29,8 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.login(process.env.TOKEN);
+
+setInterval(async () => {
+	console.log('Pinging DB to keep the pool alive');
+	await keepPoolAlive();
+}, 45000);
