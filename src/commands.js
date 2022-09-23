@@ -10,32 +10,18 @@ const {
 const { CharacterCodes} = require('./character_codes');
 const moment = require('moment');
 
-const ping = async (interaction) => {
-  await interaction.reply('Pong!');
-}
-
-const server = async (interaction) => {
-  await interaction.reply(`Server name: ${interaction.guild.name}\nTotal members: ${interaction.guild.memberCount}`);
-}
-
-const user = async (interaction) => {
-  await interaction.reply(`Your tag: ${interaction.user.tag}\nYour id: ${interaction.user.id}`);
-}
-
 const profile = async (interaction) => {
   let exists = await doesUserExist(interaction);
   if (exists) {
+    await interaction.deferReply();
+
     let userProfile = await getUserProfile(interaction);
     let nameAndRankString = `${userProfile.username} | ${userProfile.rank} ${userProfile.points}`;
     let teamString = userProfile.teams.join('\n');
-    await interaction.reply(`${nameAndRankString} \n ${teamString}`);
+    await interaction.editReply(`${nameAndRankString} \n ${teamString}`);
   } else {
     await interaction.reply('You need to register in order to view your profile...');
   }
-}
-
-const sheet = async (interaction) => {
-  await interaction.reply(process.env.SPREADSHEET_URL);
 }
 
 const ready = async (interaction, appState) => {
@@ -114,20 +100,8 @@ const executeCommands = async (interaction, appState) => {
   const { commandName } = interaction;
   
   switch (commandName) {
-    case 'ping':
-      await ping(interaction);
-      break;
-    case 'server':
-      await server(interaction);
-      break;
-    case 'user':
-      await user(interaction);
-      break;
     case 'profile':
       await profile(interaction);
-      break;
-    case 'sheet':
-      await sheet(interaction);
       break;
     case 'ready':
       await ready(interaction, appState);

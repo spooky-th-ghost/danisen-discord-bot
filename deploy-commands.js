@@ -8,12 +8,8 @@ let guildId = process.env.GUILD_ID;
 let token = process.env.TOKEN;
 
 const commands = [
-  new SlashCommandBuilder().setName('ping').setDescription('Replies with pong!'),
-  new SlashCommandBuilder().setName('server').setDescription('Replies with server info!'),
-  new SlashCommandBuilder().setName('user').setDescription('Replies with user info!'),
   new SlashCommandBuilder().setName('report').setDescription('Report a win'),
   new SlashCommandBuilder().setName('profile').setDescription('Show your current ranking'),
-  new SlashCommandBuilder().setName('sheet').setDescription('The Danisen Ranking sheet'),
   new SlashCommandBuilder().setName('ready').setDescription('Enter Matchmaking'),
   new SlashCommandBuilder().setName('unready').setDescription('Remove yourself from the matchmaking pool'),
   new SlashCommandBuilder().setName('players').setDescription('Display the users in matchmaking'),

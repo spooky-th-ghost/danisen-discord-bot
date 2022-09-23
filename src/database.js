@@ -86,7 +86,8 @@ const getUserProfile = async (interaction) => {
     let team = rawTeam.map(rt => {
       return getEmoji(rt);
     });
-    teams.push(team);
+    let formattedTeam = team.join(' | ');
+    teams.push(formattedTeam);
   }
 
   if (profile.team2 != null) {
@@ -98,7 +99,8 @@ const getUserProfile = async (interaction) => {
     let team = rawTeam.map(rt => {
       return getEmoji(rt);
     });
-    teams.push(team);
+    let formattedTeam = team.join(' | ');
+    teams.push(formattedTeam);
   }
 
   if (profile.team3 != null) {
@@ -115,7 +117,7 @@ const getUserProfile = async (interaction) => {
   }
 
   return {
-    username: profile.username,
+    username: profile.username.split('#')[0],
     rank: profile.rank,
     points: profile.points,
     teams
