@@ -11,16 +11,15 @@ const { CharacterCodes} = require('./character_codes');
 const moment = require('moment');
 
 const profile = async (interaction) => {
+  await interaction.deferReply();
   let exists = await doesUserExist(interaction);
   if (exists) {
-    await interaction.deferReply();
-
     let userProfile = await getUserProfile(interaction);
     let nameAndRankString = `${userProfile.username} | ${userProfile.rank} ${userProfile.points}`;
     let teamString = userProfile.teams.join('\n');
     await interaction.editReply(`${nameAndRankString} \n ${teamString}`);
   } else {
-    await interaction.reply('You need to register in order to view your profile...');
+    await interaction.editReply('You need to register in order to view your profile...');
   }
 }
 
@@ -65,32 +64,35 @@ const players = async (interaction, appState) => {
 }
 
 const session = async (interaction, appState) => {
+  await interaction.deferReply();
   let data = await isSessionOpen();
   let sessionStatus = data.variable_value ? 'OPEN' : 'CLOSED';
   let formattedDate = moment(data.last_changed).format('MMMM Do YYYY, h:mm:ss a');
   let response = `
     The Danisen session is currently ${sessionStatus},
     the session has been ${sessionStatus} since ${formattedDate}`;
-  await interaction.reply(response);
+  await interaction.editReply(response);
 }
 
 const register = async (interaction, appState) => {
+  await interaction.deferReply();
   let exists = await doesUserExist(interaction);
   if (exists) {
-    await interaction.reply('You have already registered')
+    await interaction.editReply('You have already registered')
   } else {
     await registerUser(interaction);
-    await interaction.reply('You have successfully registered, call /register-team to register a team!');
+    await interaction.editReply('You have successfully registered, call /register-team to register a team!');
   }
 }
 
 const registerTeam = async (interaction, appState) => {
+  await interaction.deferReply();
   let hasSlot = await userHasFreeTeamSlot(interaction);
   if (!hasSlot) {
-    await interaction.reply('You have no open team slots, call /profile to view your currently registered teams.')
+    await interaction.editReply('You have no open team slots, call /profile to view your currently registered teams.')
   } else {
     let displayString = await registerNewTeam(interaction);
-    await interaction.reply(`Team registered successfully! \n ${displayString}`);
+    await interaction.editReply(`Team registered successfully! \n ${displayString}`);
   }
 }
 
