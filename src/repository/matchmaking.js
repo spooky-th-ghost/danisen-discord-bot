@@ -212,7 +212,19 @@ const decreaseRank = (rank) => {
   }
 }
 
-const reportWin = async (user, pool) => {
+const updateNicknameWithRank = (user, interaction, rank, points) => {
+  interaction.guild.members.fetch(user.id).then(guildMember => {
+	let nickname = String(guildMember.displayName);
+  	let nameArray = nickname.split('|');
+  	let nicknameWithoutRank = nameArray[0].trim();
+  	if(nicknameWithoutRank.length > 22)
+  		nicknameWithoutRank = nicknameWithoutRank.substring(0, 19) + '...';
+  	let newNickname = nicknameWithoutRank + '|' + rank + (points < 0 ? '' : '+') + points;
+  	guildMember.setNickname(newNickname);
+  }).catch(console.error);
+}
+
+const reportWin = async (user, pool, interaction) => {
   let { rank, points } = await getRankData(user, pool);
   let changedRank = false;
   points += 1;
@@ -238,9 +250,10 @@ const reportWin = async (user, pool) => {
 
   
   const res = await pool.query(query, values);
+  updateNicknameWithRank(user, interaction, rank, points);
 }
 
-const reportLoss = async (user, pool) => {
+const reportLoss = async (user, pool, interaction) => {
   let { rank, points } = await getRankData(user, pool);
   let changedRank = false;
   points -= 1;
@@ -268,8 +281,8 @@ const reportLoss = async (user, pool) => {
     ? [user.id, points, rank]
     : [user.id, points];
 
-  
   const res = await pool.query(query, values);
+  updateNicknameWithRank(user, interaction, rank, points);
 }
 
 const reportScore = async (interaction, pool) => {
@@ -301,6 +314,7 @@ const reportScore = async (interaction, pool) => {
     }
 
     if (isMatchWithinThreshhold) {
+	  // &rew 2022-09-24: This probably should check against whether or not it was in the same open sesssion.
       return 'You have played this player to recently';
     }
 
@@ -315,8 +329,8 @@ const reportScore = async (interaction, pool) => {
     values($1, $2, $3, $4, $5)
   `, [reporterId, reporterScore, opponentId, opponentScore, winnerId]);
 
-    await reportWin(winner, pool);
-    await reportLoss(loser, pool);
+    await reportWin(winner, pool, interaction);
+    await reportLoss(loser, pool, interaction);
 
     return 'Match Reported Successfully'
   } catch (err) {
