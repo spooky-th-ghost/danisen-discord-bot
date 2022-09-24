@@ -288,8 +288,8 @@ const reportScore = async (interaction, pool) => {
     const isDanisenSessionOpen = await isSessionOpen(pool);
     const isMatchWithinThreshhold = await matchWithinThreshhold(reporter, opponent, pool);
 
-    if (reporterScore + opponentScore > 5) {
-      return `Invalid game count, you can't both have won 3 games...`;
+    if (reporterScore + opponentScore > 5 || (reporterScore < 3 && opponentScore < 3)) {
+      return `Invalid game count`;
     }
 
     if (!canFight) {
