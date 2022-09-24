@@ -169,10 +169,70 @@ const registerNewTeam = async (interaction, pool) => {
   return emojiArray.join(' | ');
 }
 
+const reRegisterExistingTeam = async (interaction, pool) => {
+  let targetSlotOption = interaction.options['_hoistedOptions'].find(ho => ho.name);
+  let targetSlot = targetSlotOption.value;
+  interaction.options['_hoistedOptions'].splice(0, 1);
+  let rawCharacters = interaction.options['_hoistedOptions'].map(ho => ho.value);
+  const dedupedCharacterSet = new Set(rawCharacters);
+  const characters = Array.from(dedupedCharacterSet);
+
+  if (characters.length == 0) {
+    return 'No Characters passed';
+  }
+
+  let query = '';
+  switch (characters.length) {
+    case 1:
+      query = `
+        insert into sg_team(owner_id, character_1)
+        select
+          id,
+          $2
+        from danisen_user
+        where discord_id = $1
+        returning id`;
+      break;
+    case 2:
+      query = `
+        insert into sg_team(owner_id, character_1, character_2)
+        select
+          id,
+          $2,
+          $3
+        from danisen_user
+        where discord_id = $1
+        returning id`;
+      break;
+    case 3:
+      query = `
+        insert into sg_team(owner_id, character_1, character_2, character_3)
+        select
+          id,
+          $2,
+          $3,
+          $4
+        from danisen_user
+        where discord_id = $1\
+        returning id`;
+      break;
+  }
+  
+  let teamCreateResult = await pool.query(query, [interaction.user.id, ...characters]);
+  let teamId = teamCreateResult.rows[0].id;
+
+  let teamRegQuery = `update danisen_user set ${targetSlot} = $2 where discord_id = $1`;
+  await pool.query(teamRegQuery, [interaction.user.id, teamId]);
+  let emojiArray = characters.map(c => getEmoji(c));
+  let charactersString = emojiArray.join(' | ');
+  return `Team registered to slot ${targetSlot.slice(-1)} successfully! \n ${charactersString}`
+}
+
 module.exports = {
   registerUser,
   doesUserExist,
   userHasFreeTeamSlot,
   getUserProfile,
-  registerNewTeam
+  registerNewTeam,
+  reRegisterExistingTeam
 }

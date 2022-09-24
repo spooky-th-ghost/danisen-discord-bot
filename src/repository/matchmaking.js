@@ -16,6 +16,49 @@ const isSessionOpen = async (pool) => {
   }
 }
 
+const isPlayerMatching = async (interaction, pool) => {
+  const res = await pool.query(`
+    select 
+      current_status = 'matching' as value 
+    from 
+      danisen_user du  
+    where du.discord_id = $1 
+    limit 1;
+  `, [interaction.user.id]);
+
+  return rows[0].value;
+}
+
+const setStatusToMatching = async (interaction, pool) => {
+  let isMatching = await isPlayerMatching(interaction, pool);
+  if (isMatching) {
+    return true;
+  }
+  const res = await pool.query(`
+    update danisen_user 
+    set current_status = 'matching' 
+    where discord_id = $1
+  `, [interaction.user.id]);
+
+  return false;
+}
+
+const setStatusToDormant = async (interaction, pool) => {
+  let isMatching = await isPlayerMatching(interaction, pool);
+  if (!isMatching) {
+    return true;
+  }
+  const res = await pool.query(`
+    update danisen_user 
+    set current_status = 'dormant' 
+    where discord_id = $1
+  `, [interaction.user.id]);
+
+  return alreadySet;
+}
+
 module.exports = {
-  isSessionOpen
+  isSessionOpen,
+  setStatusToMatching,
+  setStatusToDormant
 }

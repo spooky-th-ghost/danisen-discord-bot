@@ -35,10 +35,38 @@ const commands = [
         .setDescription('The first character on your team')
         .setRequired(false)
         .addChoices(...CharacterChoices)
-    ),
-  new SlashCommandBuilder().setName('re-register-team-1').setDescription('Re Register your team in slot 1'),
-  new SlashCommandBuilder().setName('re-register-team-2').setDescription('Re Register your team in slot 2'),
-  new SlashCommandBuilder().setName('re-register-team-3').setDescription('Re Register your team in slot 3'),
+  ),
+  new SlashCommandBuilder()
+    .setName('re-register-team')
+    .setDescription('Re-register one of your teams')
+    .addStringOption(option => 
+      option.setName('slot')
+        .setDescription('The slot you want to re-register')
+        .setRequired(true)
+        .addChoices(
+          { name: '1', value: 'team1' },
+          { name: '2', value: 'team2' },
+          { name: '3', value: 'team3' }
+        )
+    )
+    .addStringOption(option =>
+      option.setName('char1')
+        .setDescription('The first character on your team')
+        .setRequired(true)
+        .addChoices(...CharacterChoices)
+    )
+    .addStringOption(option =>
+      option.setName('char2')
+        .setDescription('The first character on your team')
+        .setRequired(false)
+        .addChoices(...CharacterChoices)
+    )
+      .addStringOption(option =>
+      option.setName('char3')
+        .setDescription('The first character on your team')
+        .setRequired(false)
+        .addChoices(...CharacterChoices)
+  )
 ]
 	.map(command => command.toJSON());
 

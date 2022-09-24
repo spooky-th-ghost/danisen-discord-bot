@@ -5,10 +5,15 @@ const {
   doesUserExist,
   userHasFreeTeamSlot,
   getUserProfile,
-  registerNewTeam
+  registerNewTeam,
+  reRegisterExistingTeam
 } = require('@repository/registration');
 
-const { isSessionOpen } = require('@repository/matchmaking');
+const {
+  isSessionOpen,
+  setStatusToMatching,
+  setStatusToDormant
+} = require('@repository/matchmaking');
 
 const profile = async (interaction, pool) => {
   await interaction.deferReply();
@@ -24,38 +29,22 @@ const profile = async (interaction, pool) => {
 }
 
 const ready = async (interaction, pool) => {
-  let username = interaction.user.username;
-  if (!appState.currentPlayers.some(cp => cp.username == username)) {
-    appState.currentPlayers.push({
-      username,
-      status: 'matching',
-      alreadyPlayed: []
-    });
-    await interaction.reply(`You have been entered into matchmaking ${username}`);
+  interaction.deferReply();
+  let statusAlreadySet = await setStatusToMatching(interaction, pool);
+  if (statusAlreadySet) {
+    await interaction.editReply(`You were already in matchmaking`);
   } else {
-    let myIndex = appState.currentPlayers.findIndex(cp => cp.username == username);
-    if (myIndex != -1) {
-      let myEntry = { ...appState.currentPlayers[myIndex] };
-      myEntry.status = 'matching';
-      appState.currentPlayers.splice(myIndex,1);
-      appState.currentPlayers.push(myEntry);
-    }
-    await interaction.reply(`You have been entered into matchmaking ${username}`);
+    await interaction.editReply(`You have been entered into matchmaking`);
   }
 }
 
 const unready = async (interaction, pool) => {
-  let username = interaction.user.username;
-  let myIndex = appState.currentPlayers.findIndex(cp => cp.username == username);
-
-  if (myIndex == -1) {
-    await interaction.reply(`You weren't in matchmaking ${username}`);
+  interaction.deferReply();
+  let statusAlreadySet = await setStatusToDormant(interaction, pool);
+  if (statusAlreadySet) {
+    await interaction.editReply(`You were already not in matchmaking`);
   } else {
-    let myEntry = { ...appState.currentPlayers[myIndex] };
-    myEntry.status = 'not matching';
-    appState.currentPlayers.splice(myIndex,1);
-    appState.currentPlayers.push(myEntry);
-    await interaction.reply(`You were removed from matchmaking ${username}`);
+    await interaction.editReply(`You have been removed from matchmaking`);
   }
 }
 
@@ -96,6 +85,12 @@ const registerTeam = async (interaction, pool) => {
   }
 }
 
+const reRegisterTeam = async (interaction, pool) => {
+  await interaction.deferReply();
+  let displayString = await reRegisterExistingTeam(interaction, pool);
+  await interaction.editReply(displayString);
+}
+
 const executeCommands = async (interaction, pool) => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -122,6 +117,9 @@ const executeCommands = async (interaction, pool) => {
       break;
     case 'register-team':
       await registerTeam(interaction, pool);
+      break;
+    case 're-register-team':
+      await reRegisterTeam(interaction, pool);
       break;
   }
 }
