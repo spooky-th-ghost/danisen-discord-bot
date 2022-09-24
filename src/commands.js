@@ -1,3 +1,4 @@
+const { ChannelType } = require('discord.js');
 const moment = require('moment');
 
 const {
@@ -13,6 +14,8 @@ const {
   isSessionOpen,
   setStatusToMatching,
   setStatusToDormant,
+	canPlayersFight,
+	matchWithinThreshhold,
   reportScore
 } = require('@repository/matchmaking');
 
@@ -98,6 +101,35 @@ const reportMatch = async (interaction, pool) => {
   await interaction.editReply(matchResponse);
 }
 
+const challenge = async (interaction, pool) => {
+	await interaction.deferReply();
+	const challenger = interaction.user;
+  const opponent = interaction.options.getUser('opponent');
+	
+	const canFight = await canPlayersFight(challenger, opponent, pool);
+	const isDanisenSessionOpen = await isSessionOpen(pool);
+	const isMatchWithinThreshhold = await matchWithinThreshhold(challenger, opponent, pool);
+	
+	if (!isDanisenSessionOpen) {
+		await interaction.editReply('Danisen session is not currently open');	
+	} else if (!canFight) {
+		await interaction.editReply('Players ranks are too far apart to play each other');	
+	} else if (isMatchWithinThreshhold) {
+		await interaction.editReply('You have played this player to recently');
+	} else {
+		const thread = await interaction.channel.threads.create({
+			name: `${challenger.username} v ${opponent.username}`,
+			autoArchiveDuration: 60,
+			reason: 'Matching',
+		});
+
+		thread.members.add(challenger);
+		thread.members.add(opponent);
+		await thread.send(`Match thread between ${challenger.username} and ${opponent.username}, to share a lobby link, say GG etc, feel free to call /report-match in here when you're done`);
+		await interaction.editReply('Match thread created');
+	}
+}
+
 const executeCommands = async (interaction, pool) => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -131,6 +163,9 @@ const executeCommands = async (interaction, pool) => {
     case 'report-match':
       await reportMatch(interaction, pool);
       break;
+		case 'challenge':
+			await challenge(interaction, pool);
+			break;
   }
 }
 

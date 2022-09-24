@@ -79,8 +79,8 @@ const commands = [
           {name: '1', value: 1},
           {name: '2', value: 2},
           {name: '3', value: 3},
-        )      
-    )  
+        )
+    )
     .addUserOption(option => 
       option.setName('opponent')
         .setDescription('The player you played against')
@@ -96,7 +96,15 @@ const commands = [
           {name: '2', value: 2},
           {name: '3', value: 3},
         )      
-    )  
+    ),
+	new SlashCommandBuilder()
+		.setName('challenge')
+		.setDescription('Challenge a player to a danisen match')
+		.addUserOption(option => 
+      option.setName('opponent')
+        .setDescription('The player you want to challenge')
+        .setRequired(true)
+    )
 ]
 	.map(command => command.toJSON());
 

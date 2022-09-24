@@ -1,4 +1,5 @@
 const moment = require('moment');
+const { updateRankRole } = require('@utility/roles');
 
 const isSessionOpen = async (pool) => {
   try {
@@ -212,7 +213,7 @@ const decreaseRank = (rank) => {
   }
 }
 
-const updateNicknameWithRank = (user, interaction, rank, points) => {
+const updateNicknameWithRank = (interaction, user, rank, points) => {
   interaction.guild.members.fetch(user.id).then(guildMember => {
 	let nickname = String(guildMember.displayName);
   	let nameArray = nickname.split('|');
@@ -227,11 +228,13 @@ const updateNicknameWithRank = (user, interaction, rank, points) => {
 const reportWin = async (user, pool, interaction) => {
   let { rank, points } = await getRankData(user, pool);
   let changedRank = false;
+	let newRank;
+
   points += 1;
   if (points > 2) {
     changedRank = true;
     points = 0;
-    rank = increaseRank(rank);
+    newRank = increaseRank(rank);
   }
 
   let query = changedRank
@@ -245,18 +248,30 @@ const reportWin = async (user, pool, interaction) => {
     `;
   
   let values = changedRank
-    ? [user.id, points, rank]
+    ? [user.id, points, newRank]
     : [user.id, points];
 
   
   const res = await pool.query(query, values);
-  updateNicknameWithRank(user, interaction, rank, points);
+
+	if (changedRank) {
+		let rankUpdate = {
+			oldRank: rank,
+			newRank
+		}
+
+		updateRankRole(interaction, user, rankUpdate); 
+	}
+
+  updateNicknameWithRank(interaction, user, changedRank ? newRank : rank, points);
 }
 
 const reportLoss = async (user, pool, interaction) => {
   let { rank, points } = await getRankData(user, pool);
   let changedRank = false;
-  points -= 1;
+  let newRank;
+
+	points -= 1;
   if (rank == '1st Dan' && points < 0) {
     return ''
   }
@@ -264,7 +279,7 @@ const reportLoss = async (user, pool, interaction) => {
   if (points < -2) {
     changedRank = true;
     points = 0;
-    rank = decreaseRank(rank);
+    newRank = decreaseRank(rank);
   }
 
   let query = changedRank
@@ -278,11 +293,20 @@ const reportLoss = async (user, pool, interaction) => {
     `;
   
   let values = changedRank
-    ? [user.id, points, rank]
+    ? [user.id, points, newRank]
     : [user.id, points];
 
   const res = await pool.query(query, values);
-  updateNicknameWithRank(user, interaction, rank, points);
+
+	if (changedRank) {
+		let rankUpdate = {
+			oldRank: rank,
+			newRank
+		}
+
+		updateRankRole(interaction, user, rankUpdate); 
+	}
+  updateNicknameWithRank(interaction, user, changedRank ? newRank : rank, points);
 }
 
 const reportScore = async (interaction, pool) => {
@@ -343,5 +367,7 @@ module.exports = {
   isSessionOpen,
   setStatusToMatching,
   setStatusToDormant,
-  reportScore
+  reportScore,
+	canPlayersFight,
+	matchWithinThreshhold
 }
