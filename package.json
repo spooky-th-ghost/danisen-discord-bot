@@ -14,7 +14,7 @@
   "scripts": {
     "start": "node src/server.js"
   },
-  "_moduleAliases" : {
+  "_moduleAliases": {
     "@utility": "src/utility",
     "@repository": "src/repository",
     "@services": "src/services"
