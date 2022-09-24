@@ -142,10 +142,19 @@ const reportScore = async (interaction, pool) => {
   try {
     const reporter = interaction.user;
     const opponent = interaction.options.getUser('opponent');
+    const reporterId = reporter.id;
+    const opponentId = opponent.id;
+    const reporterScore = interaction.options.getInteger('your-win-count');
+    const opponentScore = interaction.options.getInteger('opponent-win-count');
+    const winnerId = reporterScore > opponentScore ? reporterId : opponentId;
 
     const canFight = await canPlayersFight(reporter, opponent, pool);
     const isDanisenSessionOpen = await isSessionOpen(pool);
     const isMatchWithinThreshhold = await matchWithinThreshhold(reporter, opponent, pool);
+
+    if (reporterScore + opponentScore > 5) {
+      return `Invalid game count, you can't both have won 3 games...`;
+    }
 
     if (!canFight) {
       return 'Players ranks are too far apart to play each other';
@@ -158,12 +167,6 @@ const reportScore = async (interaction, pool) => {
     if (isMatchWithinThreshhold) {
       return 'You have played this player to recently';
     }
-
-    const reporterId = reporter.id;
-    const opponentId = opponent.id;
-    const reporterScore = interaction.options.getInteger('your-win-count');
-    const opponentScore = interaction.options.getInteger('opponent-win-count');
-    const winnerId = reporterScore > opponentScore ? reporterId : opponentId;
 
     const res = await pool.query(`
     insert into 
