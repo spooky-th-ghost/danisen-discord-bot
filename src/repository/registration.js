@@ -1,51 +1,20 @@
-const { Pool } = require('pg');
-const { CharacterCodes, getEmoji } = require('./character_codes');
-const connectionString = process.env.CONNECTION_STRING;
+const { CharacterCodes, getEmoji } = require('@utility/characterCodes');
 
-const pool = new Pool({
-  connectionString,
-  ssl: true,
-  idleTimeoutMillis: 0,
-  connectionTimeoutMillis: 0
-});
-
-const isSessionOpen = async () => {
-  try {
-    const res = await pool.query(`
-      select 
-        cf.variable_value,
-        cf.last_changed 
-      from 
-        config_flags cf 
-      where
-        cf.variable_name = 'session_open';
-    `);
-    let data = JSON.stringify(res.rows[0]);
-    return data;
-  } catch (err) {
-    console.log(err.stack)
-  }
-}
-
-const keepPoolAlive = async () => {
-  const res = await pool.query('select now()');
-}
-
-const registerUser = async (interaction) => {
+const registerUser = async (interaction, pool) => {
   const res = await pool.query(`
     insert into danisen_user(discord_id, username)
     values($1, $2);
   `,[interaction.user.id,interaction.user.tag]);
 }
 
-const doesUserExist = async (interaction) => {
+const doesUserExist = async (interaction, pool) => {
   const res = await pool.query(`
     select count(*) from danisen_user where discord_id = $1;
   `, [interaction.user.id]);
   return res.rows[0].count > 0;
 }
 
-const userHasFreeTeamSlot = async (interaction) => {
+const userHasFreeTeamSlot = async (interaction, pool) => {
   const res = await pool.query(`
     select team1, team2, team3 from danisen_user where discord_id = $1 limit 1;
   `,
@@ -59,7 +28,7 @@ const userHasFreeTeamSlot = async (interaction) => {
   }
 }
 
-const getUserProfile = async (interaction) => {
+const getUserProfile = async (interaction, pool) => {
   let res = await pool.query(`
     select 
    	  du.username,
@@ -124,7 +93,7 @@ const getUserProfile = async (interaction) => {
   }
 }
 
-const nextOpenTeamSlot = async (interaction) => {
+const nextOpenTeamSlot = async (interaction, pool) => {
   let res = await pool.query(`
     select
       case 
@@ -141,8 +110,8 @@ const nextOpenTeamSlot = async (interaction) => {
   return res.rows[0].value;
 }
 
-const registerNewTeam = async (interaction) => {
-  let openSlot = await nextOpenTeamSlot(interaction);
+const registerNewTeam = async (interaction, pool) => {
+  let openSlot = await nextOpenTeamSlot(interaction, pool);
   if (openSlot == 'none') {
     return '';
   }
@@ -201,8 +170,6 @@ const registerNewTeam = async (interaction) => {
 }
 
 module.exports = {
-  isSessionOpen,
-  keepPoolAlive,
   registerUser,
   doesUserExist,
   userHasFreeTeamSlot,

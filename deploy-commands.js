@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, Routes } = require('discord.js');
 const { REST } = require('@discordjs/rest');
 require('dotenv').config();
-const { CharacterChoices } = require('./src/character_codes');
+const { CharacterChoices } = require('./src/utility/characterCodes');
 
 let clientId = process.env.CLIENT_ID;
 let guildId = process.env.GUILD_ID;

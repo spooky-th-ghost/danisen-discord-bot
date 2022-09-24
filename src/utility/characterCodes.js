@@ -1,5 +1,3 @@
-const { Client, GatewayIntentBits, Emoji } = require('discord.js');
-
 const CharacterCodes = [
   'FILI',
   'CERE',

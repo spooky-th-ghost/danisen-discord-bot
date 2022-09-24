@@ -1,14 +1,10 @@
 require('dotenv').config();
-let { keepPoolAlive} = require('./database');
-
+require('module-alias/register')
 const { Client, GatewayIntentBits } = require('discord.js');
 const { executeCommands } = require('./commands');
-const axios = require('axios');
-const appState = {
-  currentPlayers: [],
-  currentMatches: [],
-  sessionIsActive: false,
-}
+const { getConnectionPool, keepPoolAlive } = require('@utility/postgres');
+
+const pool = getConnectionPool();
 
 const client = new Client({
 	intents: [
@@ -25,12 +21,12 @@ client.on('ready', () => {
 });
 
 client.on('interactionCreate', async interaction => {
-  await executeCommands(interaction, appState);
+  await executeCommands(interaction, pool);
 });
 
 client.login(process.env.TOKEN);
 
 setInterval(async () => {
 	console.log('Pinging DB to keep the pool alive');
-	await keepPoolAlive();
+	await keepPoolAlive(pool);
 }, 45000);
