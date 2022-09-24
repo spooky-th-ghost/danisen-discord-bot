@@ -12,7 +12,8 @@ const {
 const {
   isSessionOpen,
   setStatusToMatching,
-  setStatusToDormant
+  setStatusToDormant,
+  reportScore
 } = require('@repository/matchmaking');
 
 const profile = async (interaction, pool) => {
@@ -91,6 +92,12 @@ const reRegisterTeam = async (interaction, pool) => {
   await interaction.editReply(displayString);
 }
 
+const reportMatch = async (interaction, pool) => {
+  await interaction.deferReply();
+  let matchResponse = await reportScore(interaction, pool);
+  await interaction.editReply(matchResponse);
+}
+
 const executeCommands = async (interaction, pool) => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -120,6 +127,9 @@ const executeCommands = async (interaction, pool) => {
       break;
     case 're-register-team':
       await reRegisterTeam(interaction, pool);
+      break;
+    case 'report-match':
+      await reportMatch(interaction, pool);
       break;
   }
 }

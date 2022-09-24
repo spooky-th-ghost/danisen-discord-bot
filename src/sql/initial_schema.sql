@@ -26,3 +26,15 @@ create table if not exists sg_team(
       references danisen_user(id)
 );
 
+
+create table if not exists danisen_match(
+  id bigserial not null,
+  player_1_discord_id bigint not null,
+  player_1_score int4 not null,
+  player_2_discord_id bigint not null,
+  player_2_score int4 not null,
+  winner bigint not null,
+  match_date timestamptz null default now(),
+  primary key(id)
+);
+

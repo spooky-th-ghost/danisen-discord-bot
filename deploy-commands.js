@@ -66,7 +66,37 @@ const commands = [
         .setDescription('The first character on your team')
         .setRequired(false)
         .addChoices(...CharacterChoices)
-  )
+  ),
+    new SlashCommandBuilder()
+    .setName('report-match')
+    .setDescription('Report the outcome of your danisen match')
+    .addIntegerOption(option => 
+      option.setName('your-win-count')
+        .setDescription('Your score for the set')
+        .setRequired(true)
+        .addChoices(
+          {name: '0', value: 0},
+          {name: '1', value: 1},
+          {name: '2', value: 2},
+          {name: '3', value: 3},
+        )      
+    )  
+    .addUserOption(option => 
+      option.setName('opponent')
+        .setDescription('The player you played against')
+        .setRequired(true)
+    )
+    .addIntegerOption(option => 
+      option.setName('opponent-win-count')
+        .setDescription('Your opponents score for the set')
+        .setRequired(true)
+        .addChoices(
+          {name: '0', value: 0},
+          {name: '1', value: 1},
+          {name: '2', value: 2},
+          {name: '3', value: 3},
+        )      
+    )  
 ]
 	.map(command => command.toJSON());
 
