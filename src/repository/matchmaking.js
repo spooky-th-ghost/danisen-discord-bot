@@ -100,8 +100,10 @@ const canPlayersFight = async (user1, user2, pool) => {
       return (rank2 == 'Strong' || rank2 == 'Royal');
     case 'Royal':
       return (rank2 == 'Valor' || rank2 == 'Emperor');
+    case 'Emperor':
+      return (rank2 == 'Royal' || rank2 == 'Lord');
     case 'Lord':
-      return (rank2 == '1st Dan');
+      return (rank2 == 'Emperor');
   }
 
 }
@@ -126,16 +128,148 @@ const matchWithinThreshhold = async (user1, user2, pool) => {
   const matchDate = res.rows[0].match_date;
   const hourDiff = moment().diff(moment(matchDate), 'hours');
 
-  //return hourDiff > process.env
-  return  false;
+  /// Uncomment this line to actually check when the last match happened, currently turned off for testing
+  //return hourDiff > parseInt(process.env.MATCH_HOURS_THRESHHOLD);
+  return false;
+}
+
+const getRankData = async (user, pool) => {
+  const res = await pool.query(`
+    select 
+      rank, 
+      points 
+    from danisen_user du
+    where du.discord_id = $1
+    limit 1
+  `, [user.id]);
+
+  if (res.rows.length == 0) {
+    return null;
+  }
+
+  const rank = res.rows[0].rank;
+  const points = res.rows[0].points;
+
+  return {
+    rank,
+    points
+  }
+}
+
+const increaseRank = (rank) => {
+  switch (rank) {
+    case '1st Dan':
+      return '2nd Dan';
+    case '2nd Dan':
+      return '3rd Dan';
+    case '3rd Dan':
+      return '4th Dan';
+    case '4th Dan':
+      return '5th Dan';
+    case '5th Dan':
+      return '6th Dan';
+    case '6th Dan':
+      return '7th Dan';
+    case '7th Dan':
+      return 'Strong';
+    case 'Strong':
+      return 'Valor';
+    case 'Valor':
+      return 'Royal';
+    case 'Royal':
+      return 'Emperor';
+    case 'Lord':
+      return rank;
+  }
+}
+
+const decreaseRank = (rank) => {
+  switch (rank) {
+    case '1st Dan':
+      return rank;
+    case '2nd Dan':
+      return '1st Dan';
+    case '3rd Dan':
+      return '2nd Dan';
+    case '4th Dan':
+      return '3rd Dan';
+    case '5th Dan':
+      return '4th Dan';
+    case '6th Dan':
+      return '5th Dan';
+    case '7th Dan':
+      return '6th Dan';
+    case 'Strong':
+      return '7th Dan';
+    case 'Valor':
+      return 'Strong';
+    case 'Royal':
+      return 'Valor';
+    case 'Emperor':
+      return 'Royal';
+    case 'Lord':
+      return 'Emperor';
+  }
 }
 
 const reportWin = async (user, pool) => {
+  let { rank, points } = await getRankData(user, pool);
+  let changedRank = false;
+  points += 1;
+  if (points > 2) {
+    changedRank = true;
+    points = 0;
+    rank = increaseRank(rank);
+  }
 
+  let query = changedRank
+    ? `
+      update danisen_user set points = $2, rank = $3
+      where discord_id = $1
+    `
+    : `
+      update danisen_user set points = $2
+      where discord_id = $1
+    `;
+  
+  let values = changedRank
+    ? [user.id, points, rank]
+    : [user.id, points];
+
+  
+  const res = await pool.query(query, values);
 }
 
-const reporLoss = async (user, pool) => {
+const reportLoss = async (user, pool) => {
+  let { rank, points } = await getRankData(user, pool);
+  let changedRank = false;
+  points -= 1;
+  if (rank == '1st Dan' && points < 0) {
+    return ''
+  }
 
+  if (points < -2) {
+    changedRank = true;
+    points = 0;
+    rank = decreaseRank(rank);
+  }
+
+  let query = changedRank
+    ? `
+      update danisen_user set points = $2, rank = $3
+      where discord_id = $1
+    `
+    : `
+      update danisen_user set points = $2
+      where discord_id = $1
+    `;
+  
+  let values = changedRank
+    ? [user.id, points, rank]
+    : [user.id, points];
+
+  
+  const res = await pool.query(query, values);
 }
 
 const reportScore = async (interaction, pool) => {
@@ -147,6 +281,8 @@ const reportScore = async (interaction, pool) => {
     const reporterScore = interaction.options.getInteger('your-win-count');
     const opponentScore = interaction.options.getInteger('opponent-win-count');
     const winnerId = reporterScore > opponentScore ? reporterId : opponentId;
+    const winner = reporterScore > opponentScore ? reporter: opponent;
+    const loser = reporterScore < opponentScore ? reporter : opponent;
 
     const canFight = await canPlayersFight(reporter, opponent, pool);
     const isDanisenSessionOpen = await isSessionOpen(pool);
@@ -179,7 +315,8 @@ const reportScore = async (interaction, pool) => {
     values($1, $2, $3, $4, $5)
   `, [reporterId, reporterScore, opponentId, opponentScore, winnerId]);
 
-    // TODO: Adjust user scores, for simplicities sake i will write a stored function in the DB for this
+    await reportWin(winner, pool);
+    await reportLoss(loser, pool);
 
     return 'Match Reported Successfully'
   } catch (err) {

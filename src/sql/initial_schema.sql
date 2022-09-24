@@ -37,4 +37,3 @@ create table if not exists danisen_match(
   match_date timestamptz null default now(),
   primary key(id)
 );
-
