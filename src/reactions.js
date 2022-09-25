@@ -5,9 +5,9 @@ const challengeReaction = async (reaction, user) => {
   const messageChannel = messageReacted.channel;
   const [opponent, challenger] = [...messageReacted.mentions.users.values()];
 
-  console.log(reaction.emoji);
+
   if (opponent.id == user.id) {
-    if (reaction.emoji.name == '✅') {
+    if (reaction.emoji.name == '✅' && opponent != null && challenger!= null) {
       await createChallengeThread(messageChannel, challenger, opponent);
     } else if (reaction.emoji.name == '🚫') {
       await messageReacted.reply(`${opponent.username} has rejected the challenge.`);
