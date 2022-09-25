@@ -1,4 +1,3 @@
-const { ChannelType } = require('discord.js');
 const moment = require('moment');
 
 const {
@@ -116,21 +115,17 @@ const challenge = async (interaction, pool) => {
 		await interaction.editReply('Players ranks are too far apart to play each other');	
 	} else if (isMatchWithinThreshhold) {
 		await interaction.editReply('You have played this player to recently');
-	} else {
-		const thread = await interaction.channel.threads.create({
-			name: `${challenger.username} v ${opponent.username}`,
-			autoArchiveDuration: 60,
-			reason: 'Matching',
-		});
-
-		thread.members.add(challenger);
-		thread.members.add(opponent);
-		await thread.send(`Match thread between ${challenger.username} and ${opponent.username}, to share a lobby link, say GG etc, feel free to call /report-match in here when you're done`);
-		await interaction.editReply('Match thread created');
+  } else {
+    //console.log(interaction.guild);
+    const channel = await interaction.guild.channels.fetch(process.env.CHALLENGE_CHANNEL_ID);
+    const message = await channel.send(`${opponent}, ${challenger} has challenged you to play a danisen match, react to this message to accept or deny`);
+    message.react('✅');
+    message.react('🚫');
+		await interaction.editReply('Administering Challenge');
 	}
 }
 
-const executeCommands = async (interaction, pool) => {
+const executeSlashCommands = async (interaction, pool) => {
   if (!interaction.isChatInputCommand()) return;
 
   const { commandName } = interaction;
@@ -163,10 +158,14 @@ const executeCommands = async (interaction, pool) => {
     case 'report-match':
       await reportMatch(interaction, pool);
       break;
-		case 'challenge':
-			await challenge(interaction, pool);
+    case 'challenge':
+      if (interaction.channel.id == process.env.CHALLENGE_CHANNEL_ID) { 
+        await challenge(interaction, pool);
+      } else {
+        await interaction.reply("Challenge ignored, you can only challenge players in the 'challenges' channel")
+      }
 			break;
   }
 }
 
-module.exports = { executeCommands };
+module.exports = { executeSlashCommands };

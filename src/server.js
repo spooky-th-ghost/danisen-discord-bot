@@ -1,7 +1,8 @@
 require('dotenv').config();
 require('module-alias/register')
 const { Client, GatewayIntentBits } = require('discord.js');
-const { executeCommands } = require('./commands');
+const { executeSlashCommands } = require('./commands');
+const { handleReactions } = require('./reactions');
 const { getConnectionPool, keepPoolAlive } = require('@utility/postgres');
 
 const pool = getConnectionPool();
@@ -12,7 +13,9 @@ const client = new Client({
 		GatewayIntentBits.GuildMessages,
 		GatewayIntentBits.MessageContent,
 		GatewayIntentBits.GuildMembers,
+		GatewayIntentBits.GuildMessageReactions
 	],
+	 partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
 });
 
 
@@ -21,12 +24,16 @@ client.on('ready', () => {
 });
 
 client.on('interactionCreate', async interaction => {
-  await executeCommands(interaction, pool);
+  await executeSlashCommands(interaction, pool);
+});
+
+client.on('messageReactionAdd', async (messageReaction, user) => {
+	const reaction = await messageReaction.fetch();
+	await handleReactions(reaction, user);
 });
 
 client.login(process.env.TOKEN);
 
 setInterval(async () => {
-	console.log('Pinging DB to keep the pool alive');
 	await keepPoolAlive(pool);
 }, 45000);

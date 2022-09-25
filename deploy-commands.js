@@ -99,7 +99,7 @@ const commands = [
     ),
 	new SlashCommandBuilder()
 		.setName('challenge')
-		.setDescription('Challenge a player to a danisen match')
+		.setDescription("Challenge a player to a danisen match, only works in the 'challenges' channel")
 		.addUserOption(option => 
       option.setName('opponent')
         .setDescription('The player you want to challenge')
