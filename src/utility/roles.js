@@ -23,5 +23,6 @@ const updateRankRole = async (interaction, user, rankUpdate) => {
 }
 
 module.exports = {
+	roles,
 	updateRankRole
 }

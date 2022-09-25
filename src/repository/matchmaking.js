@@ -369,5 +369,5 @@ module.exports = {
   setStatusToDormant,
   reportScore,
 	canPlayersFight,
-	matchWithinThreshhold
+  matchWithinThreshhold
 }
