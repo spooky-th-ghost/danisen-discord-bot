@@ -129,6 +129,9 @@ const executeSlashCommands = async (interaction, pool) => {
   if (!interaction.isChatInputCommand()) return;
 
   const { commandName } = interaction;
+
+  const challengeChannel = interaction.channel.id == process.env.CHALLENGE_CHANNEL_ID;
+  const registrationChannel = interaction.channel.id == process.env.REGISTRATION_CHANNEL_ID;
   
   switch (commandName) {
     case 'profile':
@@ -147,22 +150,38 @@ const executeSlashCommands = async (interaction, pool) => {
       await session(interaction, pool);
       break;
     case 'register':
-      await register(interaction, pool);
+      if (registrationChannel) {
+        await register(interaction, pool);
+      } else {
+        await interaction.reply("Command ignored, you can call registration commands in the 'registration' channel");
+      }
       break;
     case 'register-team':
-      await registerTeam(interaction, pool);
+      if (registrationChannel) {
+        await registerTeam(interaction, pool);
+      } else {
+        await interaction.reply("Command ignored, you can call registration commands in the 'registration' channel");
+      }
       break;
     case 're-register-team':
-      await reRegisterTeam(interaction, pool);
-      break;
+      if (registrationChannel) {
+        await reRegisterTeam(interaction, pool);
+      } else {
+        await interaction.reply("Command ignored, you can call registration commands in the 'registration' channel");
+      }
+        break;
     case 'report-match':
-      await reportMatch(interaction, pool);
+      if (challengeChannel) {
+        await reportMatch(interaction, pool);
+      } else {
+        await interaction.reply("Command ignored, you can only report scores in the 'challenges' channel");
+      }
       break;
     case 'challenge':
-      if (interaction.channel.id == process.env.CHALLENGE_CHANNEL_ID) { 
+      if (challengeChannel) { 
         await challenge(interaction, pool);
       } else {
-        await interaction.reply("Challenge ignored, you can only challenge players in the 'challenges' channel")
+        await interaction.reply("Command ignored, you can only challenge players in the 'challenges' channel");
       }
 			break;
   }

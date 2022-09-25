@@ -24,7 +24,7 @@ const createChallengeThread = async (channel, challenger, opponent) => {
 
 	thread.members.add(challenger);
 	thread.members.add(opponent);
-	await thread.send(`Match thread between ${challenger.username} and ${opponent.username}, to share a lobby link, say GG etc, feel free to call /report-match in here when you're done`);
+	await thread.send(`**Match thread between ${challenger.username} and ${opponent.username}, to share a lobby link, say GG etc, feel free to call /report-match in here when you're done**`);
 }
 
 const handleReactions = async (reaction, user) => {
