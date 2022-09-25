@@ -1,4 +1,5 @@
 const moment = require('moment');
+const { updateRankRole } = require('@utility/roles');
 
 const isSessionOpen = async (pool) => {
   try {
@@ -212,14 +213,28 @@ const decreaseRank = (rank) => {
   }
 }
 
-const reportWin = async (user, pool) => {
+const updateNicknameWithRank = (interaction, user, rank, points) => {
+  interaction.guild.members.fetch(user.id).then(guildMember => {
+	let nickname = String(guildMember.displayName);
+  	let nameArray = nickname.split('|');
+  	let nicknameWithoutRank = nameArray[0].trim();
+  	if(nicknameWithoutRank.length > 22)
+  		nicknameWithoutRank = nicknameWithoutRank.substring(0, 19) + '...';
+  	let newNickname = nicknameWithoutRank + '|' + rank + (points < 0 ? '' : '+') + points;
+  	guildMember.setNickname(newNickname);
+  }).catch(console.error);
+}
+
+const reportWin = async (user, pool, interaction) => {
   let { rank, points } = await getRankData(user, pool);
   let changedRank = false;
+	let newRank;
+
   points += 1;
   if (points > 2) {
     changedRank = true;
     points = 0;
-    rank = increaseRank(rank);
+    newRank = increaseRank(rank);
   }
 
   let query = changedRank
@@ -233,17 +248,30 @@ const reportWin = async (user, pool) => {
     `;
   
   let values = changedRank
-    ? [user.id, points, rank]
+    ? [user.id, points, newRank]
     : [user.id, points];
 
   
   const res = await pool.query(query, values);
+
+	if (changedRank) {
+		let rankUpdate = {
+			oldRank: rank,
+			newRank
+		}
+
+		updateRankRole(interaction, user, rankUpdate); 
+	}
+
+  updateNicknameWithRank(interaction, user, changedRank ? newRank : rank, points);
 }
 
-const reportLoss = async (user, pool) => {
+const reportLoss = async (user, pool, interaction) => {
   let { rank, points } = await getRankData(user, pool);
   let changedRank = false;
-  points -= 1;
+  let newRank;
+
+	points -= 1;
   if (rank == '1st Dan' && points < 0) {
     return ''
   }
@@ -251,7 +279,7 @@ const reportLoss = async (user, pool) => {
   if (points < -2) {
     changedRank = true;
     points = 0;
-    rank = decreaseRank(rank);
+    newRank = decreaseRank(rank);
   }
 
   let query = changedRank
@@ -265,11 +293,20 @@ const reportLoss = async (user, pool) => {
     `;
   
   let values = changedRank
-    ? [user.id, points, rank]
+    ? [user.id, points, newRank]
     : [user.id, points];
 
-  
   const res = await pool.query(query, values);
+
+	if (changedRank) {
+		let rankUpdate = {
+			oldRank: rank,
+			newRank
+		}
+
+		updateRankRole(interaction, user, rankUpdate); 
+	}
+  updateNicknameWithRank(interaction, user, changedRank ? newRank : rank, points);
 }
 
 const reportScore = async (interaction, pool) => {
@@ -301,6 +338,7 @@ const reportScore = async (interaction, pool) => {
     }
 
     if (isMatchWithinThreshhold) {
+	  // &rew 2022-09-24: This probably should check against whether or not it was in the same open sesssion.
       return 'You have played this player to recently';
     }
 
@@ -315,8 +353,8 @@ const reportScore = async (interaction, pool) => {
     values($1, $2, $3, $4, $5)
   `, [reporterId, reporterScore, opponentId, opponentScore, winnerId]);
 
-    await reportWin(winner, pool);
-    await reportLoss(loser, pool);
+    await reportWin(winner, pool, interaction);
+    await reportLoss(loser, pool, interaction);
 
     return 'Match Reported Successfully'
   } catch (err) {
@@ -329,5 +367,7 @@ module.exports = {
   isSessionOpen,
   setStatusToMatching,
   setStatusToDormant,
-  reportScore
+  reportScore,
+	canPlayersFight,
+	matchWithinThreshhold
 }
