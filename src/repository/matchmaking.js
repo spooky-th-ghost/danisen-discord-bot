@@ -1,5 +1,6 @@
 const moment = require('moment');
 const { updateRankRole } = require('@utility/roles');
+const { getUserByDiscordId, extractModalFields } = require('@utility/helpers');
 
 const isSessionOpen = async (pool) => {
   try {
@@ -311,35 +312,61 @@ const reportLoss = async (user, pool, interaction) => {
 
 const reportScore = async (interaction, pool) => {
   try {
-    const reporter = interaction.user;
-    const opponent = interaction.options.getUser('opponent');
+    let modalFields = extractModalFields(interaction);
+    let reporter;
+    let opponent;
+    let reporterScore;
+    let opponentScore;
+
+    if (interaction.user.id == modalFields.challengerId) {
+      reporter = await getUserByDiscordId(interaction, modalFields.challengerId);
+      reporterScore = +modalFields['challenger-score'];
+      opponent = await getUserByDiscordId(interaction, modalFields.opponentId);
+      opponentScore = +modalFields['opponent-score'];
+    } else {
+      reporter = await getUserByDiscordId(interaction, modalFields.opponentId);
+      reporterScore = +modalFields['opponent-score'];
+      opponent = await getUserByDiscordId(interaction, modalFields.challengerId);
+      opponentScore = +modalFields['challenger-score'];
+    }
+
+
+
     const reporterId = reporter.id;
     const opponentId = opponent.id;
-    const reporterScore = interaction.options.getInteger('your-win-count');
-    const opponentScore = interaction.options.getInteger('opponent-win-count');
     const winnerId = reporterScore > opponentScore ? reporterId : opponentId;
-    const winner = reporterScore > opponentScore ? reporter: opponent;
-    const loser = reporterScore < opponentScore ? reporter : opponent;
-
     const canFight = await canPlayersFight(reporter, opponent, pool);
     const isDanisenSessionOpen = await isSessionOpen(pool);
     const isMatchWithinThreshhold = await matchWithinThreshhold(reporter, opponent, pool);
 
     if (reporterScore + opponentScore > 5 || (reporterScore < 3 && opponentScore < 3)) {
-      return `Invalid game count`;
+      return {
+        matchId: null,
+        message: `Invalid game count`
+      };
     }
 
     if (!canFight) {
-      return 'Players ranks are too far apart to play each other';
+      return {
+        matchId: null,
+        message: 'Players ranks are too far apart to play each other'
+      };
+      
     }
 
     if (!isDanisenSessionOpen) {
-      return 'Danisen session is not currently open';
+      return {
+        matchId: null,
+        message: 'Danisen session is not currently open'
+      };
     }
 
     if (isMatchWithinThreshhold) {
 	  // &rew 2022-09-24: This probably should check against whether or not it was in the same open sesssion.
-      return 'You have played this player to recently';
+      return {
+        matchId: null,
+        message: 'You have played this player to recently'
+      };
     }
 
     const res = await pool.query(`
@@ -351,23 +378,85 @@ const reportScore = async (interaction, pool) => {
         player_2_score,
         winner)
     values($1, $2, $3, $4, $5)
-  `, [reporterId, reporterScore, opponentId, opponentScore, winnerId]);
+    returning id
+    `, [reporterId, reporterScore, opponentId, opponentScore, winnerId]);
+    
+    let matchId = res.rows[0].id;
 
-    await reportWin(winner, pool, interaction);
-    await reportLoss(loser, pool, interaction);
-
-    return 'Match Reported Successfully'
+    return {
+      matchId,
+      message: 'Match Reported Successfully',
+      reporter,
+      opponent,
+      reporterScore,
+      opponentScore
+    };
   } catch (err) {
     console.error(err);
-    return 'Failed to report match'
+    return {
+      matchId: null,
+      message: 'Failed to report match, reach out to a danisen tech admin'
+    };
   }    
-
 }
+
+const verifyMatchScore = async (interaction, pool, matchId) => {
+  try {
+    const res = await pool.query(`
+      update danisen_match set 
+        verified = true
+      where 
+        id = $1
+      returning 
+        player_1_discord_id,
+        player_2_discord_id,
+        winner
+    `, [matchId]);
+
+    if (res.rows.length == 0) {
+      return 'Match Not Found';
+    }
+    let { player_1_discord_id: reporterId, player_2_discord_id: opponentId, winner: winnerId } = res.rows[0];
+
+    const loserId = winnerId == reporterId ? opponentId : reporterId;
+
+    let winner = await getUserByDiscordId(interaction, winnerId);
+    let loser = await getUserByDiscordId(interaction, loserId);
+    
+    await reportWin(winner, pool, interaction);
+    await reportLoss(loser, pool, interaction);
+  } catch (error) {
+    console.log(error);
+    return 'Failed to verify match';
+  }
+  return 'Match Verified Succsessfully!';
+}
+
+const getMatchVerifierId = async (interaction, pool, matchId) => {
+  const res = await pool.query(`
+    select 
+      dm.player_2_discord_id 
+    from
+      danisen_match dm
+    where dm.id = $1
+    limit 1
+  `, [matchId]);
+
+  if (res.rows.length == 0) {
+    return null;
+  }
+  
+  let verifierId = res.rows[0].player_2_discord_id;
+  return verifierId;
+}
+
 module.exports = {
   isSessionOpen,
   setStatusToMatching,
   setStatusToDormant,
   reportScore,
 	canPlayersFight,
-  matchWithinThreshhold
+  matchWithinThreshhold,
+  getMatchVerifierId,
+  verifyMatchScore
 }

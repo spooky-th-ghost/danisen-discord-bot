@@ -15,8 +15,14 @@ const {
   setStatusToDormant,
 	canPlayersFight,
 	matchWithinThreshhold,
-  reportScore
+  reportScore,
+  getMatchVerifierId,
+  verifyMatchScore
 } = require('@repository/matchmaking');
+
+const {
+  getUserByDiscordId
+} = require('@utility/helpers');
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
 
 const profile = async (interaction, pool) => {
@@ -95,12 +101,6 @@ const reRegisterTeam = async (interaction, pool) => {
   await interaction.editReply(displayString);
 }
 
-const reportMatch = async (interaction, pool) => {
-  await interaction.deferReply();
-  let matchResponse = await reportScore(interaction, pool);
-  await interaction.editReply(matchResponse);
-}
-
 const challenge = async (interaction, pool) => {
 	await interaction.deferReply();
 	const challenger = interaction.user;
@@ -149,7 +149,12 @@ const challenge = async (interaction, pool) => {
 const challengeAccepted = async (interaction) => {
   const message = interaction.message;
   const messageChannel = interaction.message.channel;
-  const [opponent, challenger] = [...message.mentions.users.values()];
+  const [challenger, opponent] = [...message.mentions.users.values()];
+
+  console.log(`Interaction: ${interaction.user.id}`);
+  console.log(`Opponent: ${opponent.id}`);
+  console.log(`Challenger: ${challenger.id}`);
+  
 
   if (opponent.id == interaction.user.id) {
     await createChallengeThread(messageChannel, challenger, opponent);
@@ -218,24 +223,66 @@ const scoreReportModal = async (interaction, challengerId, oponentId) => {
   }
 
   await interaction.showModal(modal);
-  // new ModalBuilder()
-  //   .setCustomId('report-modal')
-  //   .setTitle('Report Scores');
-  
-  // let firstRow = new ActionRowBuilder().addComponents(scoreReportInput(challenger, 'challenger'));
-  // let secondRow = new ActionRowBuilder().addComponents(scoreReportInput(opponent, 'opponent'));
-  
 }
 
 const scoreReportInput = (user, userType) => {
   return {
     type: 4,
-    custom_id: `${userType}-score`,
+    custom_id: `${userType}-score_${user.id}`,
     label: `${user.username} score`,
     style: '1',
     min_length: 1,
     max_length: 1,
     placeholder: '0'
+  }
+}
+
+const verifyMatch = async (interaction, pool, matchId) => {
+  await interaction.deferReply();
+  let verifierId = await getMatchVerifierId(interaction, pool, matchId);
+  if (verifierId == interaction.user.id) {
+    let response = await verifyMatchScore(interaction, pool, matchId);
+    await interaction.editReply(response);
+  } else {
+    let verifierMember = await interaction.guild.members.fetch(verifierId);
+    let verifier = verifierMember.user;
+    await interaction.editReply(`Verification failed, only ${verifier.username} can verify the match results`);
+  }
+}
+
+const reportModalSubmission = async (interaction, pool) => {
+  await interaction.deferReply();
+  let {
+    matchId,
+    message,
+    reporter,
+    opponent,
+    reporterScore,
+    opponentScore
+  } = await reportScore(interaction, pool);
+  await interaction.editReply({ content: message });
+  if (matchId != null) {
+    let verificationMessageContent = reporterScore > opponentScore
+      ? `${opponent}, ${reporter.username} has reported the match score as ${reporterScore}-${opponentScore} in THEIR favor, if this is correct click the button below to verify`
+      : `${opponent}, ${reporter.username} has reported the match score as ${opponentScore}-${reporterScore} in YOUR favor, if this is correct click the button below to verify`
+    let verificationMessage = {
+      'content': verificationMessageContent,
+      "components": [
+        {
+          "type": 1,
+          "components": [
+            {
+              'type': 2,
+              'style': 3,
+              'label': 'Verify',
+              'custom_id': `verify-match_${matchId}`
+            }
+          ]
+
+        }
+      ]
+    }
+    await interaction.channel.send(verificationMessage)
   }
 }
 
@@ -255,6 +302,20 @@ const buttonInteractions = async (interaction, pool) => {
     let challengerId = rawId[1];
     let opponentId = rawId[2];
     await scoreReportModal(interaction, challengerId, opponentId);
+  }
+
+  if (interaction.customId.startsWith('verify-match')) {
+    let rawId = interaction.customId.split('_');
+    let matchId = rawId[1];
+    await verifyMatch(interaction, pool, matchId);
+  }
+}
+
+const modalInteractions = async (interaction, pool) => {
+  switch (interaction.customId) {
+    case 'report-modal':
+      await reportModalSubmission(interaction, pool)
+      break;
   }
 }
 
@@ -300,13 +361,6 @@ const executeSlashCommands = async (interaction, pool) => {
         await interaction.reply("Command ignored, you can call registration commands in the 'registration' channel");
       }
         break;
-    case 'report-match':
-      if (challengeChannel) {
-        await reportMatch(interaction, pool);
-      } else {
-        await interaction.reply("Command ignored, you can only report scores in the 'challenges' channel");
-      }
-      break;
     case 'challenge':
       if (challengeChannel) { 
         await challenge(interaction, pool);
@@ -327,7 +381,7 @@ const handleInteractions = async (interaction, pool) => {
   }
 
   if (interaction.isModalSubmit()) {
-
+    await modalInteractions(interaction, pool);
   }
 }
 
