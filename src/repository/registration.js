@@ -6,7 +6,7 @@ const registerUser = async (interaction, pool) => {
   const res = await pool.query(`
     insert into danisen_user(discord_id, username)
     values($1, $2);
-  `, [interaction.user.id, interaction.user.tag]);
+  `, [interaction.user.id, interaction.user.username]);
 	
 	const member = await interaction.guild.members.fetch(interaction.user.id);
 	const roleToAdd = roles.find(r => r.name == '1st Dan').id;  

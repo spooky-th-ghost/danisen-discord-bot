@@ -29,7 +29,7 @@ const createChallengeThread = async (channel, challenger, opponent) => {
 
 const handleReactions = async (reaction, user) => {
   if (user.id == process.env.CLIENT_ID) return;
-
+  console.log(reaction);
   await challengeReaction(reaction, user);
 }
 
