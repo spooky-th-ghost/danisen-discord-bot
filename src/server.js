@@ -1,5 +1,6 @@
 require('dotenv').config();
-require('module-alias/register')
+require('module-alias/register');
+require('@hugop/discord-table');
 const { Client, GatewayIntentBits } = require('discord.js');
 const { handleInteractions } = require('./commands');
 const { handleReactions } = require('./reactions');

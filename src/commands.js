@@ -1,10 +1,13 @@
 const moment = require('moment');
+const dcTable = require('@hugop/discord-table');
 
 const {
   registerUser,
   doesUserExist,
+  doAnyUsersExist,
   userHasFreeTeamSlot,
   getUserProfile,
+  getAllUserProfilesByRank,
   registerNewTeam,
   reRegisterExistingTeam
 } = require('@repository/registration');
@@ -35,6 +38,37 @@ const profile = async (interaction, pool) => {
     await interaction.editReply(`${nameAndRankString} \n ${teamString}`);
   } else {
     await interaction.editReply('You need to register in order to view your profile...');
+  }
+}
+
+const standings = async (interaction, pool) => {
+  await interaction.deferReply();
+  let exists = await doAnyUsersExist(pool);
+  if (exists) {
+	// get list of user profiles
+	// for each user profile, do what the profile command does already
+    let userProfiles = await getAllUserProfilesByRank(pool);
+    let standingsString = '';
+    for(i = 0; i < userProfiles.length; i++){
+	  let userProfile = userProfiles[i];
+	  let nameAndRankString = `${userProfile[1]}` + (parseInt(userProfile[2]) >= 0 ? `+` : ``) + `${userProfile[2]} \t|\t ${userProfile[0]}`;
+      let teamString = userProfile[3].join(' AND ');
+      standingsString = standingsString + `${nameAndRankString} -- ${teamString}\n`;
+    }
+    
+    let tableHeaders = [["Column1"], ["Column2"]];
+    let content = [["value1"], ["value2"]];
+    let resultTable = dcTable.createDiscordTable({
+		headers: tableHeaders,
+		content: content,
+		spacesBetweenColumns: [5],
+		maxColumnLengths: [30, 30]
+	});
+    
+    //await interaction.editReply(standingsString);
+    await interaction.editReply(resultTable);
+  } else {
+    await interaction.editReply('No teams registered yet...');
   }
 }
 
@@ -327,6 +361,9 @@ const executeSlashCommands = async (interaction, pool) => {
   switch (commandName) {
     case 'profile':
       await profile(interaction, pool);
+      break;
+    case 'standings':
+      await standings(interaction, pool);
       break;
     case 'ready':
       await ready(interaction, pool);
