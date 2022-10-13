@@ -1,5 +1,5 @@
 const moment = require('moment');
-const dcTable = require('@hugop/discord-table');
+const dcTable = require('@utility/discordTable');
 
 const {
   registerUser,
