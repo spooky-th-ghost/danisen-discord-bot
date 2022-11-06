@@ -1,10 +1,13 @@
 const moment = require('moment');
+const dcTable = require('@utility/discordTable');
 
 const {
   registerUser,
   doesUserExist,
+  doAnyUsersExist,
   userHasFreeTeamSlot,
   getUserProfile,
+  getAllUserProfilesByRank,
   registerNewTeam,
   reRegisterExistingTeam
 } = require('@repository/registration');
@@ -23,6 +26,7 @@ const {
 const {
   getUserByDiscordId
 } = require('@utility/helpers');
+
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
 
 const profile = async (interaction, pool) => {
@@ -35,6 +39,46 @@ const profile = async (interaction, pool) => {
     await interaction.editReply(`${nameAndRankString} \n ${teamString}`);
   } else {
     await interaction.editReply('You need to register in order to view your profile...');
+  }
+}
+
+const standings = async (interaction, pool) => {
+  await interaction.deferReply();
+  let exists = await doAnyUsersExist(pool);
+  if (exists) {
+	// get list of user profiles
+	// for each user profile, do what the profile command does already
+    let userProfiles = await getAllUserProfilesByRank(pool);
+    let standingsString = '';
+    let content = []; 
+    content.push([["----"], ["-----------"], ["----"]]);
+    for(i = 0; i < userProfiles.length; i++){
+	  let userProfile = userProfiles[i];
+	  //let nameAndRankString = `${userProfile[1]}` + (parseInt(userProfile[2]) >= 0 ? `+` : ``) + `${userProfile[2]} \t|\t ${userProfile[0]}`;
+      //let teamString = userProfile[3].join(' AND ');
+      //standingsString = standingsString + `${nameAndRankString} -- ${teamString}\n`;
+      let rankString = `${userProfile[1]}` + (parseInt(userProfile[2]) >= 0 ? `+` : ``) + `${userProfile[2]}`;
+      let playerString = String(userProfile[0]);
+      let teamArray = [];
+      for(let x = 0; x < userProfile[3].length; x++)
+      {
+        teamArray.push(String(userProfile[3][x]));
+      }
+      content.push([[rankString], [playerString], teamArray]);
+    }
+    
+    let tableHeaders = [["Rank"], ["Player Name"], ["Team"]];
+    
+    let resultTable = dcTable.createDiscordTable({
+		headers: tableHeaders,
+		content: content,
+		spacesBetweenColumns: [5, 5],
+		maxColumnLengths: [30, 30, 30]
+	});
+    
+    await interaction.editReply(resultTable.join('\n'));
+  } else {
+    await interaction.editReply('No teams registered yet...');
   }
 }
 
@@ -327,6 +371,9 @@ const executeSlashCommands = async (interaction, pool) => {
   switch (commandName) {
     case 'profile':
       await profile(interaction, pool);
+      break;
+    case 'standings':
+      await standings(interaction, pool);
       break;
     case 'ready':
       await ready(interaction, pool);

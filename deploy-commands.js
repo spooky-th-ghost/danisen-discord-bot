@@ -10,6 +10,7 @@ let token = process.env.TOKEN;
 const commands = [
   new SlashCommandBuilder().setName('report').setDescription('Report a win'),
   new SlashCommandBuilder().setName('profile').setDescription('Show your current ranking'),
+  new SlashCommandBuilder().setName('standings').setDescription('Show list of current rankings'),
   new SlashCommandBuilder().setName('ready').setDescription('Enter Matchmaking'),
   new SlashCommandBuilder().setName('unready').setDescription('Remove yourself from the matchmaking pool'),
   new SlashCommandBuilder().setName('players').setDescription('Display the users in matchmaking'),
