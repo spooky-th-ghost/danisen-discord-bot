@@ -261,7 +261,7 @@ const reportWin = async (user, pool, interaction) => {
 			newRank
 		}
 
-		updateRankRole(interaction, user, rankUpdate); 
+		//updateRankRole(interaction, user, rankUpdate); 
 	}
 
   updateNicknameWithRank(interaction, user, changedRank ? newRank : rank, points);
@@ -305,7 +305,7 @@ const reportLoss = async (user, pool, interaction) => {
 			newRank
 		}
 
-		updateRankRole(interaction, user, rankUpdate); 
+		//updateRankRole(interaction, user, rankUpdate); 
 	}
   updateNicknameWithRank(interaction, user, changedRank ? newRank : rank, points);
 }
