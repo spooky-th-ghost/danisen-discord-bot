@@ -10,7 +10,7 @@ const registerUser = async (interaction, pool) => {
 	
 	const member = await interaction.guild.members.fetch(interaction.user.id);
 	const roleToAdd = roles.find(r => r.name == '1st Dan').id;  
-	member.roles.add(roleToAdd);
+	//member.roles.add(roleToAdd);
   await updateNicknameWithRank(interaction, interaction.user, '1st Dan', 0);
   return;
 }
