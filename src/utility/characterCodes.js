@@ -46,6 +46,16 @@ const getEmoji = (charCode) => {
   }
 }
 
+const getNames = (charCode) => {
+  let myPairingIndex = CodeEmojiPairs.findIndex(ce => ce.code == charCode);
+  if (myPairingIndex != -1) {
+    let emojiString =  `${CodeEmojiPairs[myPairingIndex].name}`;
+    return emojiString;
+  } else {
+    return '';
+  }
+}
+
 const CharacterChoices = [
   { name: 'Filia', value: 'FILI' },
   { name: 'Cerebella', value: 'CERE' },
@@ -68,5 +78,6 @@ const CharacterChoices = [
 module.exports = {
   CharacterCodes,
   CharacterChoices,
-  getEmoji
+  getEmoji,
+  getNames
 }
