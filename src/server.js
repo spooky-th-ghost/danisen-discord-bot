@@ -27,7 +27,7 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.on("message", function(message){
-    console.log(`message is created -> ${message}`);
+
 });
 
 client.on('messageReactionAdd', async (messageReaction, user) => {

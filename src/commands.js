@@ -193,12 +193,7 @@ const challenge = async (interaction, pool) => {
 const challengeAccepted = async (interaction) => {
   const message = interaction.message;
   const messageChannel = interaction.message.channel;
-  const [challenger, opponent] = [...message.mentions.users.values()];
-
-  console.log(`Interaction: ${interaction.user.id}`);
-  console.log(`Opponent: ${opponent.id}`);
-  console.log(`Challenger: ${challenger.id}`);
-  
+  const [challenger, opponent] = [...message.mentions.users.values()];  
 
   if (opponent.id == interaction.user.id) {
     await createChallengeThread(messageChannel, challenger, opponent);
