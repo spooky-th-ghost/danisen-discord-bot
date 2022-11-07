@@ -43,7 +43,7 @@ const profile = async (interaction, pool) => {
 }
 
 const standings = async (interaction, pool) => {
-  await interaction.deferReply();
+  await interaction.reply('Standings is broken right now, sorry');
   let exists = await doAnyUsersExist(pool);
   if (exists) {
 	// get list of user profiles

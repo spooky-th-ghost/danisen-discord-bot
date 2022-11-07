@@ -1,8 +1,6 @@
 require('dotenv').config();
-require('module-alias/register');
 const { Client, GatewayIntentBits } = require('discord.js');
 const { handleInteractions } = require('./commands');
-const { handleReactions } = require('./reactions');
 const { getConnectionPool, keepPoolAlive } = require('@utility/postgres');
 
 const pool = getConnectionPool();
@@ -28,11 +26,6 @@ client.on('interactionCreate', async interaction => {
 
 client.on("message", function(message){
 
-});
-
-client.on('messageReactionAdd', async (messageReaction, user) => {
-	const reaction = await messageReaction.fetch();
-	await handleReactions(reaction, user);
 });
 
 client.login(process.env.TOKEN);
