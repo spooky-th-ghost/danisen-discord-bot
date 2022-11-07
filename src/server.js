@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('module-alias/register');
 const { Client, GatewayIntentBits } = require('discord.js');
 const { handleInteractions } = require('./commands');
 const { getConnectionPool, keepPoolAlive } = require('@utility/postgres');
