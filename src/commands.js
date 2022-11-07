@@ -1,5 +1,5 @@
 const moment = require('moment');
-const dcTable = require('@utility/discordTable');
+const dcTable = require('./utility/discordTable');
 
 const {
   registerUser,
