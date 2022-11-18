@@ -29,6 +29,8 @@ const {
 
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
 
+const NUM_ROWS_PER_PAGE = 5; // not recommended to be changed much due to Discord message character limits
+
 const profile = async (interaction, pool) => {
   await interaction.deferReply();
   let exists = await doesUserExist(interaction, pool);
@@ -43,20 +45,16 @@ const profile = async (interaction, pool) => {
 }
 
 const standings = async (interaction, pool) => {
-  await interaction.reply('Standings is broken right now, sorry');
+  await interaction.reply('Generating current league standings...');
   let exists = await doAnyUsersExist(pool);
   if (exists) {
 	// get list of user profiles
 	// for each user profile, do what the profile command does already
     let userProfiles = await getAllUserProfilesByRank(pool);
     let standingsString = '';
-    let content = []; 
-    content.push([["----"], ["-----------"], ["----"]]);
+    let content = [];
     for(i = 0; i < userProfiles.length; i++){
 	  let userProfile = userProfiles[i];
-	  //let nameAndRankString = `${userProfile[1]}` + (parseInt(userProfile[2]) >= 0 ? `+` : ``) + `${userProfile[2]} \t|\t ${userProfile[0]}`;
-      //let teamString = userProfile[3].join(' AND ');
-      //standingsString = standingsString + `${nameAndRankString} -- ${teamString}\n`;
       let rankString = `${userProfile[1]}` + (parseInt(userProfile[2]) >= 0 ? `+` : ``) + `${userProfile[2]}`;
       let playerString = String(userProfile[0]);
       let teamArray = [];
@@ -68,15 +66,28 @@ const standings = async (interaction, pool) => {
     }
     
     let tableHeaders = [["Rank"], ["Player Name"], ["Team"]];
-    
-    let resultTable = dcTable.createDiscordTable({
-		headers: tableHeaders,
-		content: content,
-		spacesBetweenColumns: [5, 5],
-		maxColumnLengths: [30, 30, 30]
-	});
-    
-    await interaction.editReply(resultTable.join('\n'));
+	
+	let numPages = Math.ceil(content.length / NUM_ROWS_PER_PAGE);
+	let currentPage = [];
+	interaction.channel.send('At ' + NUM_ROWS_PER_PAGE + ' rows per page and ' + content.length + ' records, we should have ' + numPages + ' pages.');
+	for(let rowCounter = 0; rowCounter < content.length; rowCounter++)
+	{
+		if(currentPage.length == 0)
+			currentPage.push([["----"], ["-----------"], ["----"]]);
+		currentPage.push(content[rowCounter]);
+		
+		if(currentPage.length - 1 >= NUM_ROWS_PER_PAGE || rowCounter >= content.length - 1)
+		{
+			let resultTable = dcTable.createDiscordTable({
+				headers: tableHeaders,
+				content: currentPage,
+				spacesBetweenColumns: [5, 5],
+				maxColumnLengths: [30, 30, 45]
+			});
+			interaction.channel.send(resultTable.join('\n'));
+			currentPage = [];
+		}
+	}
   } else {
     await interaction.editReply('No teams registered yet...');
   }
