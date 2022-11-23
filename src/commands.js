@@ -16,8 +16,9 @@ const {
   isSessionOpen,
   setStatusToMatching,
   setStatusToDormant,
-	canPlayersFight,
-	matchWithinThreshhold,
+  canPlayersFight,
+  matchWithinThreshhold,
+  manualSetRank,
   reportScore,
   getMatchVerifierId,
   verifyMatchScore
@@ -29,7 +30,8 @@ const {
 
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
 
-const NUM_ROWS_PER_PAGE = 5; // not recommended to be changed much due to Discord message character limits
+const NUM_ROWS_PER_PAGE = 5; // not recommended to be changed much due to Discord message character limits (can be improved if we detect how many teams each user has; currently assumes each user on a page has 3 teams registered)
+const DANISEN_ORGANIZER_ROLE = "Danisen Organizer"; // change this to the name of the Danisen Organizer role; should be "Danisen Organizer"
 
 const profile = async (interaction, pool) => {
   await interaction.deferReply();
@@ -159,7 +161,7 @@ const reRegisterTeam = async (interaction, pool) => {
 const challenge = async (interaction, pool) => {
 	await interaction.deferReply();
 	const challenger = interaction.user;
-  const opponent = interaction.options.getUser('opponent');
+    const opponent = interaction.options.getUser('opponent');
 	
 	const canFight = await canPlayersFight(challenger, opponent, pool);
 	const isDanisenSessionOpen = await isSessionOpen(pool);
@@ -199,6 +201,12 @@ const challenge = async (interaction, pool) => {
     })
 		await interaction.editReply('Administering Challenge');
 	}
+}
+
+const setRank = async (interaction, pool) => {
+  await interaction.deferReply();
+  let displayString = await manualSetRank(interaction, pool);
+  await interaction.editReply(displayString);
 }
 
 const challengeAccepted = async (interaction) => {
@@ -373,6 +381,7 @@ const executeSlashCommands = async (interaction, pool) => {
   const { commandName } = interaction;
   const challengeChannel = ((interaction.channel.type == 0 && interaction.channel.id == process.env.CHALLENGE_CHANNEL_ID) || (interaction.channel.type == 11 && interaction.channel.parentId == process.env.CHALLENGE_CHANNEL_ID));
   const registrationChannel = interaction.channel.id == process.env.REGISTRATION_CHANNEL_ID;
+  const danisenOrganizer = interaction.member.roles.cache.some(role => role.name === DANISEN_ORGANIZER_ROLE);
   
   switch (commandName) {
     case 'profile':
@@ -413,14 +422,21 @@ const executeSlashCommands = async (interaction, pool) => {
       } else {
         await interaction.reply("Command ignored, you can call registration commands in the 'registration' channel");
       }
-        break;
+      break;
     case 'challenge':
       if (challengeChannel) { 
         await challenge(interaction, pool);
       } else {
         await interaction.reply("Command ignored, you can only challenge players in the 'challenges' channel");
       }
-			break;
+	  break;
+	case 'set-rank':
+	  if (danisenOrganizer){
+	    await setRank(interaction, pool);
+	  } else {
+	    await interaction.reply("Command ignored, only those with the " + DANISEN_ORGANIZER_ROLE + " role may use this command.");
+	  }
+	  break;
   }
 }
 

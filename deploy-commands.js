@@ -2,19 +2,14 @@ const { SlashCommandBuilder, Routes } = require('discord.js');
 const { REST } = require('@discordjs/rest');
 require('dotenv').config();
 const { CharacterChoices } = require('./src/utility/characterCodes');
-const { RankChoices } = require('./src/utility/rank');
+const { RankChoices, PointChoices } = require('./src/utility/rank');
 
 let clientId = process.env.CLIENT_ID;
 let guildId = process.env.GUILD_ID;
 let token = process.env.TOKEN;
 
 const commands = [
- // new SlashCommandBuilder().setName('report').setDescription('Report a win'),
   new SlashCommandBuilder().setName('profile').setDescription('Show your current ranking'),
- // new SlashCommandBuilder().setName('standings').setDescription('Show list of current rankings'),
- // new SlashCommandBuilder().setName('ready').setDescription('Enter Matchmaking'),
- // new SlashCommandBuilder().setName('unready').setDescription('Remove yourself from the matchmaking pool'),
- // new SlashCommandBuilder().setName('players').setDescription('Display the users in matchmaking'),
   new SlashCommandBuilder().setName('session').setDescription('Display whether the Danisen league is currently in session'),
   new SlashCommandBuilder().setName('register').setDescription('Register for the Danisen league'),
   new SlashCommandBuilder().setName('register-team')
@@ -98,24 +93,29 @@ const commands = [
     //       {name: '3', value: 3},
     //     )      
     // ),
-//	new SlashCommandBuilder()
-//		.setName('challenge')
-//		.setDescription("Challenge a player to a danisen match, only works in the 'challenges' channel")
-//		.addUserOption(option => 
- //     option.setName('opponent')
-  //      .setDescription('The player you want to challenge')
-   //     .setRequired(true)
- // ),
-  //new SlashCommandBuilder().setName('set-rank').setDescription("Mod only, manually set a players rank")
-  //  .addUserOption(option => 
-  //    option.setName('player')
-  //      .setDescription("The player whose rank is being adjusted")
-  //      .setRequired(true))
-  //  .addStringOption(option => 
-  //    option.setName('rank')
-   //     .setDescription("The Rank to assign the player")
-   //     .setRequired(true)
-   // .addChoices(...RankChoices))
+	new SlashCommandBuilder()
+		.setName('challenge')
+		.setDescription("Challenge a player to a danisen match, only works in the 'challenges' channel")
+		.addUserOption(option => 
+      option.setName('opponent')
+        .setDescription('The player you want to challenge')
+        .setRequired(true)
+  ),
+  new SlashCommandBuilder().setName('set-rank').setDescription("Mod only, manually set a players rank")
+    .addUserOption(option => 
+      option.setName('player')
+        .setDescription("The player whose rank is being adjusted")
+        .setRequired(true))
+    .addStringOption(option => 
+      option.setName('rank')
+        .setDescription("The rank to assign the player")
+        .setRequired(true)
+    	.addChoices(...RankChoices))
+    .addStringOption(option =>
+      option.setName('points')
+      	.setDescription("The points this player has at this rank")
+      	.setRequired(true)
+      	.addChoices(...PointChoices))
 ]
 	.map(command => command.toJSON());
 
