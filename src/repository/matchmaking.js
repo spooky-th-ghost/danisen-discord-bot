@@ -226,6 +226,44 @@ const updateNicknameWithRank = (interaction, user, rank, points) => {
   }).catch(console.error);
 }
 
+const manualSetRank = async (interaction, pool) => {
+  const player = interaction.options.getUser('player');
+  let { rank, points } = await getRankData(player, pool);
+  let oldRank = rank;
+  let oldPoints = points;
+  let newRank = interaction.options.getString('rank');
+  let newPoints = interaction.options.getString('points');
+  let changedRank = oldRank === newRank && parseInt(oldPoints) === parseInt(newPoints) ? false : true;
+
+  if(!changedRank)
+  	return "Rank not changed.  New rank matches the existing rank."
+
+  let query = 
+    `
+      update danisen_user set points = $2, rank = $3
+      where discord_id = $1
+    `;
+  
+  let values = [player.id, newPoints, newRank];
+
+  
+  const res = await pool.query(query, values);
+
+  if (changedRank) {
+	let rankUpdate = {
+		oldRank,
+		newRank
+	}
+
+	//updateRankRole(interaction, user, rankUpdate); 
+  }
+
+  updateNicknameWithRank(interaction, player, newRank, newPoints);
+  return "Rank for " + player.username + " has been updated from " + oldRank +
+  	(parseInt(oldPoints) >= 0 ? " +" : " ") + oldPoints + " to " + newRank +
+  	(parseInt(newPoints) >= 0 ? " +" : " ") + newPoints + ".";
+}
+
 const reportWin = async (user, pool, interaction) => {
   let { rank, points } = await getRankData(user, pool);
   let changedRank = false;
@@ -454,8 +492,9 @@ module.exports = {
   isSessionOpen,
   setStatusToMatching,
   setStatusToDormant,
+  manualSetRank,
   reportScore,
-	canPlayersFight,
+  canPlayersFight,
   matchWithinThreshhold,
   getMatchVerifierId,
   verifyMatchScore

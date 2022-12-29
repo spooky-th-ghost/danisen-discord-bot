@@ -8,6 +8,15 @@ const RankChoices = [
   { name: '7th Dan', value: '7th Dan' },
 ]
 
+const PointChoices = [
+  { name: '2', value: '2' },
+  { name: '1', value: '1' },
+  { name: '0', value: '0' },
+  { name: '-1', value: '-1' },
+  { name: '-2', value: '-2' },
+]
+
 module.exports = {
-  RankChoices
+  RankChoices,
+  PointChoices
 }
