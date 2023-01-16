@@ -30,7 +30,7 @@ const {
 
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
 
-const NUM_ROWS_PER_PAGE = 5; // not recommended to be changed much due to Discord message character limits (can be improved if we detect how many teams each user has; currently assumes each user on a page has 3 teams registered)
+const NUM_CHARACTERS_PER_PAGE = 1500; // not recommended to be changed much due to Discord message character limits (can be improved, but currently leaves a small buffer to prevent errors)
 const DANISEN_ORGANIZER_ROLE = "Danisen Organizer"; // change this to the name of the Danisen Organizer role; should be "Danisen Organizer"
 
 const profile = async (interaction, pool) => {
@@ -49,46 +49,53 @@ const profile = async (interaction, pool) => {
 const standings = async (interaction, pool) => {
   await interaction.reply('Generating current league standings...');
   let exists = await doAnyUsersExist(pool);
+  let standingsString = '';
+  let current_dan_rank = '';
+  let pages = [];
   if (exists) {
 	// get list of user profiles
-	// for each user profile, do what the profile command does already
+	// for each user profile, pull the below info, sorted by Danisen rank
+	// Player Name, Rank Differential, Team1 Char1, Team1 Char2, Team1 Char3, Team2 Char1, Team2 Char2, Team2 Char3, Team3 Char1, Team3 Char2, Team3 Char3
     let userProfiles = await getAllUserProfilesByRank(pool);
-    let standingsString = '';
-    let content = [];
     for(i = 0; i < userProfiles.length; i++){
 	  let userProfile = userProfiles[i];
-      let rankString = `${userProfile[1]}` + (parseInt(userProfile[2]) >= 0 ? `+` : ``) + `${userProfile[2]}`;
-      let playerString = String(userProfile[0]);
-      let teamArray = [];
+	  if(current_dan_rank !== userProfile[1])
+	  {
+	  	current_dan_rank = userProfile[1];
+	  	if(standingsString.length + 16 > NUM_CHARACTERS_PER_PAGE)
+	  	{
+	  		pages.append(standingsString);
+	  		standingsString = '-------' + '\n' + current_dan_rank + '\n' + '-------';
+	  	}
+	  	else
+	  		standingsString = (standingsString !== '' ? (standingsString + '\n') : '') + '-------' + '\n' + current_dan_rank + '\n' + '-------';
+	  }
+      let playerString = '\n' + String(userProfile[0]) + ',' + userProfile[2];
+      const re = new RegExp(',','g');
       for(let x = 0; x < userProfile[3].length; x++)
       {
-        teamArray.push(String(userProfile[3][x]));
+      	playerString = playerString + ',' + userProfile[3][x];
+      	let count = 0;
+      	if(userProfile[3][x].match(re) != null)
+      		count = userProfile[3][x].match(re).length;
+      	for(let y = 2; y > count; y--)
+      		playerString = playerString + ',';
       }
-      content.push([[rankString], [playerString], teamArray]);
+      if(standingsString.length + playerString.length > NUM_CHARACTERS_PER_PAGE)
+      {
+      	pages.push(standingsString);
+      	standingsString = playerString.substring(1);
+      }
+      else
+      	standingsString = standingsString + playerString;
     }
-    
-    let tableHeaders = [["Rank"], ["Player Name"], ["Team"]];
-	
-	let numPages = Math.ceil(content.length / NUM_ROWS_PER_PAGE);
-	let currentPage = [];
-	interaction.channel.send('At ' + NUM_ROWS_PER_PAGE + ' rows per page and ' + content.length + ' records, we should have ' + numPages + ' pages.');
-	for(let rowCounter = 0; rowCounter < content.length; rowCounter++)
+
+	if(standingsString.length > 0)
+		pages.push(standingsString);
+	interaction.channel.send('With a limit of ' + NUM_CHARACTERS_PER_PAGE + ' characters per page, we should have ' + pages.length + ' pages.');
+	for(let pageCounter = 0; pageCounter < pages.length; pageCounter++)
 	{
-		if(currentPage.length == 0)
-			currentPage.push([["----"], ["-----------"], ["----"]]);
-		currentPage.push(content[rowCounter]);
-		
-		if(currentPage.length - 1 >= NUM_ROWS_PER_PAGE || rowCounter >= content.length - 1)
-		{
-			let resultTable = dcTable.createDiscordTable({
-				headers: tableHeaders,
-				content: currentPage,
-				spacesBetweenColumns: [5, 5],
-				maxColumnLengths: [30, 30, 45]
-			});
-			interaction.channel.send(resultTable.join('\n'));
-			currentPage = [];
-		}
+		interaction.channel.send(pages[pageCounter]);
 	}
   } else {
     await interaction.editReply('No teams registered yet...');

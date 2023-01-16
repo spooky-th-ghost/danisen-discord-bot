@@ -11,6 +11,7 @@ let token = process.env.TOKEN;
 const commands = [
   new SlashCommandBuilder().setName('profile').setDescription('Show your current ranking'),
   new SlashCommandBuilder().setName('session').setDescription('Display whether the Danisen league is currently in session'),
+  new SlashCommandBuilder().setName('standings').setDescription('Output a list of the current standings (formatted for Google Sheets)'),
   new SlashCommandBuilder().setName('register').setDescription('Register for the Danisen league'),
   new SlashCommandBuilder().setName('register-team')
     .setDescription('Register a team')
