@@ -1,4 +1,4 @@
-const { CharacterCodes, getEmoji, getNames } = require('@utility/characterCodes');
+const { CharacterCodes, getEmoji, getIconCell, getNames } = require('@utility/characterCodes');
 const { updateNicknameWithRank } = require('@utility/nicknames');
 const { roles } = require('@utility/roles');
 
@@ -146,9 +146,9 @@ const getAllUserProfilesByRank = async (pool) => {
       if (rawTeamObj.character_2 != null) rawTeam.push(rawTeamObj.character_2);
       if (rawTeamObj.character_3 != null) rawTeam.push(rawTeamObj.character_3);
       let team = rawTeam.map(rt => {
-        return getNames(rt);
+        return getIconCell(rt);
       });
-      let formattedTeam = team.join(' | ');
+      let formattedTeam = team.join(',');
       teams.push(formattedTeam);
     }
 
@@ -159,9 +159,9 @@ const getAllUserProfilesByRank = async (pool) => {
       if (rawTeamObj.character_2 != null) rawTeam.push(rawTeamObj.character_2);
       if (rawTeamObj.character_3 != null) rawTeam.push(rawTeamObj.character_3);
       let team = rawTeam.map(rt => {
-        return getNames(rt);
+        return getIconCell(rt);
       });
-      let formattedTeam = team.join(' | ');
+      let formattedTeam = team.join(',');
       teams.push(formattedTeam);
     }
 
@@ -172,9 +172,9 @@ const getAllUserProfilesByRank = async (pool) => {
       if (rawTeamObj.character_2 != null) rawTeam.push(rawTeamObj.character_2);
       if (rawTeamObj.character_3 != null) rawTeam.push(rawTeamObj.character_3);
       let team = rawTeam.map(rt => {
-        return getNames(rt);
+        return getIconCell(rt);
       });
-      let formattedTeam = team.join(' | ');
+      let formattedTeam = team.join(',');
       teams.push(formattedTeam);
     }
     let item = [profile.username.split('#')[0], profile.rank, profile.points, teams];
