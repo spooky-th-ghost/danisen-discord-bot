@@ -28,6 +28,7 @@ const {
   getUserByDiscordId
 } = require('@utility/helpers');
 
+const {getChannelsByGuildId} = require('@utility/channelMap');
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
 
 const NUM_ROWS_PER_PAGE = 5; // not recommended to be changed much due to Discord message character limits (can be improved if we detect how many teams each user has; currently assumes each user on a page has 3 teams registered)
@@ -174,7 +175,8 @@ const challenge = async (interaction, pool) => {
 	} else if (isMatchWithinThreshhold) {
 		await interaction.editReply('You have played this player to recently');
   } else {
-    const channel = await interaction.guild.channels.fetch(process.env.CHALLENGE_CHANNEL_ID);
+		const channels = getChannelsByGuildId(interaction.guildId);
+    const channel = await interaction.guild.channels.fetch(channels.challenge);
     const message = await channel.send({
       "content": `${opponent}, ${challenger} has challenged you to play a danisen match, react to this message to accept or deny`,
       "components": [
@@ -379,8 +381,9 @@ const modalInteractions = async (interaction, pool) => {
 
 const executeSlashCommands = async (interaction, pool) => {
   const { commandName } = interaction;
-  const challengeChannel = ((interaction.channel.type == 0 && interaction.channel.id == process.env.CHALLENGE_CHANNEL_ID) || (interaction.channel.type == 11 && interaction.channel.parentId == process.env.CHALLENGE_CHANNEL_ID));
-  const registrationChannel = interaction.channel.id == process.env.REGISTRATION_CHANNEL_ID;
+	const channels = getChannelsByGuildId(interaction.guildId);
+  const challengeChannel = channels.challenge;
+  const registrationChannel = channels.registration;
   const danisenOrganizer = interaction.member.roles.cache.some(role => role.name === DANISEN_ORGANIZER_ROLE);
   
   switch (commandName) {
