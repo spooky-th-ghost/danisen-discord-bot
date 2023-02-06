@@ -35,7 +35,7 @@ const CodeEmojiPairs = [
   { code: 'ROBO', emoji: '<:ROBO:1022692720885637180>', name:'Robo Fortune', iconCell: 'B14' },
   { code: 'ANIE', emoji: '<:ANIE:1022692709019942952>', name:'Annie', iconCell: 'B15' },
   { code: 'UMBR', emoji: '<:UMBR:1022692723926503494>', name:'Umbrella', iconCell: 'B16' },
-  { code: 'BDAH', emoji: '<:BDAH:1067251516978765874>', name:'Black Dahlia', iconCell: 'B17' },
+  { code: 'BDAH', emoji: '<:BDAH:1071974695500513320>', name:'Black Dahlia', iconCell: 'B17' },
 ]
 
 const getEmoji = (charCode) => {
