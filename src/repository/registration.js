@@ -68,7 +68,7 @@ const getUserProfile = async (interaction, pool) => {
     if (rawTeamObj.character_2 != null) rawTeam.push(rawTeamObj.character_2);
     if (rawTeamObj.character_3 != null) rawTeam.push(rawTeamObj.character_3);
     let team = rawTeam.map(rt => {
-      return getEmoji(rt);
+      return getEmoji(rt,interaction);
     });
     let formattedTeam = team.join(' | ');
     teams.push(formattedTeam);
@@ -81,7 +81,7 @@ const getUserProfile = async (interaction, pool) => {
     if (rawTeamObj.character_2 != null) rawTeam.push(rawTeamObj.character_2);
     if (rawTeamObj.character_3 != null) rawTeam.push(rawTeamObj.character_3);
     let team = rawTeam.map(rt => {
-      return getEmoji(rt);
+      return getEmoji(rt,interaction);
     });
     let formattedTeam = team.join(' | ');
     teams.push(formattedTeam);
@@ -94,7 +94,7 @@ const getUserProfile = async (interaction, pool) => {
     if (rawTeamObj.character_2 != null) rawTeam.push(rawTeamObj.character_2);
     if (rawTeamObj.character_3 != null) rawTeam.push(rawTeamObj.character_3);
     let team = rawTeam.map(rt => {
-      return getEmoji(rt);
+      return getEmoji(rt,interaction);
     });
     let formattedTeam = team.join(' | ');
     teams.push(formattedTeam);
@@ -256,7 +256,7 @@ const registerNewTeam = async (interaction, pool) => {
 
   let teamRegQuery = `update danisen_user set ${openSlot} = $2 where discord_id = $1`;
   await pool.query(teamRegQuery, [interaction.user.id, teamId]);
-  let emojiArray = characters.map(c => getEmoji(c));
+  let emojiArray = characters.map(c => getEmoji(c,interaction));
   return emojiArray.join(' | ');
 }
 
@@ -314,9 +314,9 @@ const reRegisterExistingTeam = async (interaction, pool) => {
 
   let teamRegQuery = `update danisen_user set ${targetSlot} = $2 where discord_id = $1`;
   await pool.query(teamRegQuery, [interaction.user.id, teamId]);
-  let emojiArray = characters.map(c => getEmoji(c));
+  let emojiArray = characters.map(c => getEmoji(c,interaction));
   let charactersString = emojiArray.join(' | ');
-  return `Team registered to slot ${targetSlot.slice(-1)} successfully! \n ${charactersString}`
+  return `Team registered to slot ${targetSlot.slice(-1)} successfully! \n ${charactersString}`;
 }
 
 module.exports = {
