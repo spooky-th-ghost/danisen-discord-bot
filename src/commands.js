@@ -32,7 +32,6 @@ const {getChannelsByGuildId} = require('@utility/channelMap');
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
 
 const NUM_CHARACTERS_PER_PAGE = 1500; // not recommended to be changed much due to Discord message character limits (can be improved, but currently leaves a small buffer to prevent errors)
-const DANISEN_ORGANIZER_ROLE = "Danisen Organizer"; // change this to the name of the Danisen Organizer role; should be "Danisen Organizer"
 
 const profile = async (interaction, pool) => {
   await interaction.deferReply();
@@ -391,7 +390,6 @@ const executeSlashCommands = async (interaction, pool) => {
 	const channels = getChannelsByGuildId(interaction.guildId);
   const challengeChannel = channels.challenge;
   const registrationChannel = channels.registration;
-  const danisenOrganizer = interaction.member.roles.cache.some(role => role.name === DANISEN_ORGANIZER_ROLE);
   
   switch (commandName) {
     case 'profile':
@@ -441,11 +439,7 @@ const executeSlashCommands = async (interaction, pool) => {
       }
 	  break;
 	case 'set-rank':
-	  if (danisenOrganizer){
 	    await setRank(interaction, pool);
-	  } else {
-	    await interaction.reply("Command ignored, only those with the " + DANISEN_ORGANIZER_ROLE + " role may use this command.");
-	  }
 	  break;
   }
 }

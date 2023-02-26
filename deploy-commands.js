@@ -102,11 +102,7 @@ const commands = [
         .setDescription('The player you want to challenge')
         .setRequired(true)
   ),
-  new SlashCommandBuilder().setName('set-rank').setDescription("Mod only, manually set a players rank")
-    .addUserOption(option => 
-      option.setName('player')
-        .setDescription("The player whose rank is being adjusted")
-        .setRequired(true))
+  new SlashCommandBuilder().setName('set-rank').setDescription("Manually set a players rank")
     .addStringOption(option => 
       option.setName('rank')
         .setDescription("The rank to assign the player")

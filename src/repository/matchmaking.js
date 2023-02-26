@@ -227,7 +227,7 @@ const updateNicknameWithRank = (interaction, user, rank, points) => {
 }
 
 const manualSetRank = async (interaction, pool) => {
-  const player = interaction.options.getUser('player');
+  const player = interaction.user;
   let { rank, points } = await getRankData(player, pool);
   let oldRank = rank;
   let oldPoints = points;
