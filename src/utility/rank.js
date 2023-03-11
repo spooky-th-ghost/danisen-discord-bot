@@ -1,11 +1,11 @@
 const RankChoices = [
-  { name: '1st Dan', value: '1st Dan' },
-  { name: '2nd Dan', value: '2nd Dan' },
-  { name: '3rd Dan', value: '3rd Dan' },
-  { name: '4th Dan', value: '4th Dan' },
-  { name: '5th Dan', value: '5th Dan' },
-  { name: '6th Dan', value: '6th Dan' },
-  { name: '7th Dan', value: '7th Dan' },
+  { name: '1st Dan', value: '1D' },
+  { name: '2nd Dan', value: '2D' },
+  { name: '3rd Dan', value: '3D' },
+  { name: '4th Dan', value: '4D' },
+  { name: '5th Dan', value: '5D' },
+  { name: '6th Dan', value: '6D' },
+  { name: '7th Dan', value: '7D' },
 ]
 
 const PointChoices = [

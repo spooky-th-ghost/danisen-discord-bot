@@ -219,9 +219,9 @@ const updateNicknameWithRank = (interaction, user, rank, points) => {
 	let nickname = String(guildMember.displayName);
   	let nameArray = nickname.split('|');
   	let nicknameWithoutRank = nameArray[0].trim();
-  	if(nicknameWithoutRank.length > 22)
+  	if(nicknameWithoutRank.length > 25)
   		nicknameWithoutRank = nicknameWithoutRank.substring(0, 19) + '...';
-  	let newNickname = nicknameWithoutRank + '|' + rank + (points < 0 ? '' : '+') + points;
+  	let newNickname = nicknameWithoutRank + ' | ' + rank + (points < 0 ? '' : '+') + points;
   	guildMember.setNickname(newNickname);
   }).catch(console.error);
 }
