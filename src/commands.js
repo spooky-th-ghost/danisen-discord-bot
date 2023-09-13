@@ -419,14 +419,26 @@ const executeSlashCommands = async (interaction, pool) => {
       break;
     case 'register-team':
       if (registrationChannel) {
-        await registerTeam(interaction, pool);
+        let exists = await doesUserExist(interaction, pool);
+        if (exists) {
+          await registerTeam(interaction, pool);
+        }
+        else {
+          await interaction.reply("Command ignored, you must be registered before saving teams.")
+        }
       } else {
         await interaction.reply("Command ignored, you can call registration commands in the 'registration' channel");
       }
       break;
     case 're-register-team':
       if (registrationChannel) {
-        await reRegisterTeam(interaction, pool);
+        let exists = await doesUserExist(interaction, pool);
+        if (exists) {
+          await reRegisterTeam(interaction, pool);
+        }
+        else {
+          await interaction.reply("Command ignored, you must be registered before saving teams.")
+        }
       } else {
         await interaction.reply("Command ignored, you can call registration commands in the 'registration' channel");
       }
