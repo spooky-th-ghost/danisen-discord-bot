@@ -390,10 +390,14 @@ const executeSlashCommands = async (interaction, pool) => {
 	const channels = getChannelsByGuildId(interaction.guildId);
   const challengeChannel = channels.challenge;
   const registrationChannel = channels.registration;
-  
+  let exists = await doesUserExist(interaction, pool);
   switch (commandName) {
     case 'profile':
-      await profile(interaction, pool);
+        if (exists) {
+          await profile(interaction, pool);
+        } else {
+          await interaction.reply("Command ignored, you must be registered before saving teams.")
+        }
       break;
     case 'standings':
       await standings(interaction, pool);
@@ -419,7 +423,6 @@ const executeSlashCommands = async (interaction, pool) => {
       break;
     case 'register-team':
       if (registrationChannel) {
-        let exists = await doesUserExist(interaction, pool);
         if (exists) {
           await registerTeam(interaction, pool);
         } else {
@@ -431,7 +434,6 @@ const executeSlashCommands = async (interaction, pool) => {
       break;
     case 're-register-team':
       if (registrationChannel) {
-        let exists = await doesUserExist(interaction, pool);
         if (exists) {
           await reRegisterTeam(interaction, pool);
         } else {
@@ -443,13 +445,21 @@ const executeSlashCommands = async (interaction, pool) => {
       break;
     case 'challenge':
       if (challengeChannel) { 
-        await challenge(interaction, pool);
+        if (exists) {
+          await challenge(interaction, pool);
+        } else {
+          await interaction.reply("Command ignored, you must be registered before issuing challenges.")
+        }
       } else {
         await interaction.reply("Command ignored, you can only challenge players in the 'challenges' channel");
       }
 	  break;
 	case 'set-rank':
-	    await setRank(interaction, pool);
+      if (exists) {
+        await setRank(interaction, pool);
+      } else {
+        await interaction.reply("Command ignored, you must be registered before setting rank.")
+        }
 	  break;
   }
 }
