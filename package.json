@@ -18,5 +18,8 @@
     "@utility": "src/utility",
     "@repository": "src/repository",
     "@services": "src/services"
+  },
+  "devDependencies": {
+    "@flydotio/dockerfile": "^0.4.9"
   }
 }

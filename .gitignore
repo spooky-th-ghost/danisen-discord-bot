@@ -4,3 +4,6 @@
 *.env.live
 *.env.mix
 node_modules
+*.directory
+*.dockerignore
+Dockerfile

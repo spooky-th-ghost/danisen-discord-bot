@@ -387,7 +387,7 @@ const modalInteractions = async (interaction, pool) => {
 
 const executeSlashCommands = async (interaction, pool) => {
   const { commandName } = interaction;
-	const channels = getChannelsByGuildId(interaction.guildId);
+  const channels = getChannelsByGuildId(interaction.guildId);
   const challengeChannel = channels.challenge;
   const registrationChannel = channels.registration;
   let exists = await doesUserExist(interaction, pool);
